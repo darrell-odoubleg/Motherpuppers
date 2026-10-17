@@ -139,9 +139,10 @@ function render() {
           const d = t.done[b];
           const label = b === 'Done' ? '' : esc(b);
           if (d) {
-            // Monthly chores show the day they were done, since the box stays filled all month.
-            const when = period === 'monthly' ? `<span class="when">${esc(fmtDay(d.at))}</span>` : '';
-            const at = period === 'monthly' ? `${fmtDay(d.at)}, ${fmtTime(d.at)}` : fmtTime(d.at);
+            // Weekly and monthly chores show the day they were done, since the box stays filled for the whole period.
+            const dated = period !== 'daily';
+            const when = dated ? `<span class="when">${esc(fmtDay(d.at))}</span>` : '';
+            const at = dated ? `${fmtDay(d.at)}, ${fmtTime(d.at)}` : fmtTime(d.at);
             html += `<button class="box done" style="background:${d.color};color:${textOn(d.color)}" data-who="${esc(d.name)} · ${esc(at)}">${label || '✓'}<span class="who">${esc(initials(d.name))}</span>${when}</button>`;
           } else {
             const isArmed = armed && armed.task === t.id && armed.box === b;
