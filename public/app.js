@@ -66,6 +66,7 @@ function fmtDate(s, opts) {
   return new Date(y, m - 1, d).toLocaleDateString('en-US', opts);
 }
 const fmtTime = (iso) => new Date(iso).toLocaleString('en-US', { timeZone: state.timezone, weekday: 'short', hour: 'numeric', minute: '2-digit' });
+const fmtDay = (iso) => new Date(iso).toLocaleDateString('en-US', { timeZone: state.timezone, month: 'short', day: 'numeric' });
 
 function resetText(period) {
   const p = state.periods;
@@ -138,7 +139,10 @@ function render() {
           const d = t.done[b];
           const label = b === 'Done' ? '' : esc(b);
           if (d) {
-            html += `<button class="box done" style="background:${d.color};color:${textOn(d.color)}" data-who="${esc(d.name)} · ${esc(fmtTime(d.at))}">${label || '✓'}<span class="who">${esc(initials(d.name))}</span></button>`;
+            // Monthly chores show the day they were done, since the box stays filled all month.
+            const when = period === 'monthly' ? `<span class="when">${esc(fmtDay(d.at))}</span>` : '';
+            const at = period === 'monthly' ? `${fmtDay(d.at)}, ${fmtTime(d.at)}` : fmtTime(d.at);
+            html += `<button class="box done" style="background:${d.color};color:${textOn(d.color)}" data-who="${esc(d.name)} · ${esc(at)}">${label || '✓'}<span class="who">${esc(initials(d.name))}</span>${when}</button>`;
           } else {
             const isArmed = armed && armed.task === t.id && armed.box === b;
             html += `<button class="box ${s.readOnly ? 'ro' : ''} ${isArmed ? 'armed' : ''}" data-task="${t.id}" data-box="${esc(b)}">${isArmed ? 'Tap again' : (label || 'Done')}</button>`;
