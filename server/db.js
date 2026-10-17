@@ -60,7 +60,7 @@ db.exec(`
 `);
 
 const DEFAULT_SETTINGS = {
-  timezone: process.env.TZ_DEFAULT || 'America/Chicago',
+  timezone: process.env.TZ_DEFAULT || 'America/Denver',
   summer_months: '[5,6,7,8,9]',
   winter_months: '[11,12,1,2,3]',
 };
