@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mother Puppers Cleaning</title>
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+
+<div id="login" class="login-wrap hidden">
+  <form class="login" id="loginForm">
+    <h1>Mother Puppers</h1>
+    <p>Cleaning lists — sign in</p>
+    <label for="u">Username</label>
+    <input type="text" id="u" autocomplete="username" autocapitalize="none" required>
+    <label for="p">Password</label>
+    <input type="password" id="p" autocomplete="current-password" required>
+    <button class="btn primary" type="submit">Sign in</button>
+    <div class="err" id="loginErr"></div>
+  </form>
+</div>
+
+<div id="app" class="hidden">
+  <header class="top">
+    <div class="top-row">
+      <div class="brand">Mother Puppers<small id="dateLine"></small></div>
+      <input type="date" id="histDate" class="hidden" title="View a past day" style="width:auto">
+      <a href="/admin" id="adminLink" class="btn hidden">Admin</a>
+      <span class="me"><span class="dot" id="meDot"></span><span id="meName"></span></span>
+      <button class="btn" id="logout">Sign out</button>
+    </div>
+    <nav class="tabs" id="tabs"></nav>
+  </header>
+  <main>
+    <div id="banner" class="banner hidden"></div>
+    <div id="board"></div>
+    <div class="legend" id="legend"></div>
+  </main>
+</div>
+
+<div id="toast" class="toast hidden"></div>
+<script src="/app.js"></script>
+</body>
+</html>

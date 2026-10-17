@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mother Puppers Admin</title>
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+<header class="top">
+  <div class="top-row">
+    <div class="brand">Mother Puppers<small>Admin</small></div>
+    <a href="/" class="btn">Back to lists</a>
+  </div>
+  <nav class="tabs" id="tabs">
+    <button class="tab on" data-pane="staff">Staff</button>
+    <button class="tab" data-pane="tasks">Tasks</button>
+    <button class="tab" data-pane="settings">Settings</button>
+  </nav>
+</header>
+<main class="admin">
+
+  <div id="pane-staff">
+    <h2>Add staff</h2>
+    <div class="card">
+      <div class="row">
+        <div><label>Name</label><input type="text" id="nName"></div>
+        <div><label>Username</label><input type="text" id="nUser" autocapitalize="none"></div>
+        <div><label>Password</label><input type="text" id="nPass" autocomplete="off"></div>
+        <div style="flex:0 0 auto"><label>Color</label><input type="color" id="nColor" value="#3b82f6"></div>
+        <div style="flex:0 0 auto"><label><input type="checkbox" id="nAdmin"> Admin</label></div>
+        <div style="flex:0 0 auto"><button class="btn primary" id="addUser">Add</button></div>
+      </div>
+      <div class="err" id="addErr"></div>
+    </div>
+    <h2>Staff</h2>
+    <div class="card table-wrap">
+      <table>
+        <thead><tr><th>Color</th><th>Name</th><th>Username</th><th>Admin</th><th>Active</th><th>New password</th><th></th></tr></thead>
+        <tbody id="users"></tbody>
+      </table>
+      <p class="muted">Changing a color also recolors boxes that person already checked. Turn someone off with Active instead of deleting, so their past checks keep their name.</p>
+    </div>
+  </div>
+
+  <div id="pane-tasks" class="hidden">
+    <h2>Tasks</h2>
+    <p class="muted">Boxes = the checkboxes on a row, comma-separated (e.g. <code>OPEN, EARLY, MID, LATE, CLOSE</code>, or <code>Done</code> for a single box). Months = only show in those months (e.g. <code>1, 7</code> for January &amp; July); blank = every month. Changes save when you leave a field.</p>
+    <div class="row" style="margin-bottom:12px"><div style="flex:0 1 280px"><select id="areaPick"></select></div></div>
+    <div id="editor"></div>
+  </div>
+
+  <div id="pane-settings" class="hidden">
+    <h2>Settings</h2>
+    <div class="card">
+      <label>Time zone (lists reset at 11:59 PM in this zone)</label>
+      <select id="tz">
+        <option value="America/New_York">Eastern (America/New_York)</option>
+        <option value="America/Chicago">Central (America/Chicago)</option>
+        <option value="America/Denver">Mountain (America/Denver)</option>
+        <option value="America/Phoenix">Arizona (America/Phoenix)</option>
+        <option value="America/Los_Angeles">Pacific (America/Los_Angeles)</option>
+        <option value="America/Anchorage">Alaska (America/Anchorage)</option>
+        <option value="Pacific/Honolulu">Hawaii (Pacific/Honolulu)</option>
+      </select>
+      <label>Summer sections show in these months</label>
+      <div class="row" id="summer"></div>
+      <label>Winter sections show in these months</label>
+      <div class="row" id="winter"></div>
+      <button class="btn primary" id="saveSettings" style="margin-top:14px">Save settings</button>
+      <span class="muted" id="setMsg"></span>
+    </div>
+  </div>
+
+</main>
+<div id="toast" class="toast hidden"></div>
+<script src="/admin.js"></script>
+</body>
+</html>
