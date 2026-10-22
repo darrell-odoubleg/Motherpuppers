@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mother Puppers Construction</title>
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+
+<div id="login" class="login-wrap hidden">
+  <form class="login" id="loginForm">
+    <h1>Mother Puppers</h1>
+    <p>Construction project — sign in</p>
+    <label for="u">Username</label>
+    <input type="text" id="u" autocomplete="username" autocapitalize="none" required>
+    <label for="p">Password</label>
+    <input type="password" id="p" autocomplete="current-password" required>
+    <button class="btn primary" type="submit">Sign in</button>
+    <div class="err" id="loginErr"></div>
+  </form>
+</div>
+
+<div id="app" class="hidden">
+  <header class="top">
+    <div class="top-row">
+      <div class="brand">Mother Puppers<small>Construction project management</small></div>
+      <a href="/activity" class="btn">Activity</a>
+      <a href="/admin" id="adminLink" class="btn hidden">Admin</a>
+      <span class="me" id="meName"></span>
+      <button class="btn" id="logout">Sign out</button>
+    </div>
+  </header>
+  <main>
+    <section class="tiles" id="tiles"></section>
+
+    <div class="toolbar">
+      <input type="search" id="q" placeholder="Search tasks, contractors, comments…">
+      <select id="statusFilter"><option value="">All statuses</option></select>
+      <label class="chk"><input type="checkbox" id="hideNA"> Hide N/A</label>
+      <label class="chk"><input type="checkbox" id="onlyMoney"> Only items with $</label>
+      <span class="spacer"></span>
+      <button class="btn" id="expandAll">Expand all</button>
+      <button class="btn" id="collapseAll">Collapse all</button>
+      <a class="btn" href="/api/export.csv">CSV</a>
+      <button class="btn" id="print">Print</button>
+    </div>
+
+    <div id="banner" class="banner hidden"></div>
+    <div id="sections"></div>
+    <div class="add-section hidden" id="addSectionWrap">
+      <button class="btn" id="addSection">+ Add section</button>
+    </div>
+
+    <section class="grand" id="grand"></section>
+  </main>
+</div>
+
+<div class="toast hidden" id="toast"></div>
+<script src="/app.js"></script>
+</body>
+</html>

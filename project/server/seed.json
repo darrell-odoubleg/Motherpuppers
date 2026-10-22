@@ -1,0 +1,1157 @@
+[
+ {
+  "name": "GENERAL REQUIREMENTS",
+  "tasks": [
+   {
+    "task": "Plans & Specifications",
+    "assigned": "Cushing Terrell",
+    "budget": 150000.0
+   },
+   {
+    "task": "Plan Review",
+    "assigned": "Cascade County",
+    "budget": 2500.0
+   },
+   {
+    "task": "Permits: Zoning, Building, Environemental",
+    "assigned": "Cascade County",
+    "budget": null
+   },
+   {
+    "task": "Survey",
+    "assigned": "",
+    "budget": 2500.0
+   },
+   {
+    "task": "Impact Fee",
+    "assigned": "",
+    "budget": 0.0
+   },
+   {
+    "task": "Adminstrative Costs",
+    "assigned": "LChubbs",
+    "budget": 0.0
+   },
+   {
+    "task": "Financing Costs",
+    "assigned": "",
+    "budget": null
+   },
+   {
+    "task": "Legal Fees",
+    "assigned": "N/A",
+    "budget": null
+   },
+   {
+    "task": "Engineering Fees",
+    "assigned": "Cushing Terrell",
+    "budget": null
+   },
+   {
+    "task": "Other",
+    "assigned": "",
+    "budget": null
+   }
+  ]
+ },
+ {
+  "name": "SITE PREP",
+  "tasks": [
+   {
+    "task": "Demolition (Remodel)",
+    "assigned": "N/A",
+    "budget": null
+   },
+   {
+    "task": "Property",
+    "assigned": "Mother Puppers",
+    "budget": 325000.0
+   },
+   {
+    "task": "Dust control, Surface Protection",
+    "assigned": "N/A",
+    "budget": null
+   },
+   {
+    "task": "Job-Site Access",
+    "assigned": "N/A",
+    "budget": null
+   },
+   {
+    "task": "Job-Site Security",
+    "assigned": "N/A",
+    "budget": null
+   },
+   {
+    "task": "Dumpster & Removal",
+    "assigned": "Montana Waste",
+    "budget": null
+   },
+   {
+    "task": "Clear Lot",
+    "assigned": "Iver's",
+    "budget": null
+   },
+   {
+    "task": "Storage On Site",
+    "assigned": "N/A",
+    "budget": null
+   },
+   {
+    "task": "Portable Toilet",
+    "assigned": "Porta Potty",
+    "budget": null
+   },
+   {
+    "task": "Temporary Power",
+    "assigned": "Northwester Energy",
+    "budget": null
+   },
+   {
+    "task": "Temporary Heat",
+    "assigned": "",
+    "budget": null
+   },
+   {
+    "task": "Scaffolding Rental",
+    "assigned": "",
+    "budget": null
+   },
+   {
+    "task": "Tool/Equipment Rental",
+    "assigned": "Strobles",
+    "budget": null
+   },
+   {
+    "task": "Other",
+    "assigned": "",
+    "budget": null
+   }
+  ]
+ },
+ {
+  "name": "ON-SITE WATER/SEWER",
+  "tasks": [
+   {
+    "task": "Soil & Perc Tests",
+    "assigned": "Timberline",
+    "budget": null
+   },
+   {
+    "task": "Septic System Design",
+    "assigned": "Timberline",
+    "budget": null
+   },
+   {
+    "task": "Septic Permits, Inspections, Fees",
+    "assigned": "Timberline",
+    "budget": null
+   },
+   {
+    "task": "Septic System Installation, Tie in to House",
+    "assigned": "Timberline",
+    "budget": null
+   },
+   {
+    "task": "Dewatering (High Water Table)",
+    "assigned": "Timberline",
+    "budget": null
+   },
+   {
+    "task": "Well, Pump, Trenching, Plumbing to House",
+    "assigned": "Timberline",
+    "budget": null
+   },
+   {
+    "task": "Well Permits & Fees",
+    "assigned": "Timberline",
+    "budget": null
+   },
+   {
+    "task": "Other",
+    "assigned": "Timberline",
+    "budget": 30000.0
+   }
+  ]
+ },
+ {
+  "name": "UTILITIES",
+  "tasks": [
+   {
+    "task": "Water: Tap Fees & Hookup",
+    "assigned": "Aqua Source",
+    "budget": 13500.0
+   },
+   {
+    "task": "Sewer: Tap Fees & Hookup",
+    "assigned": "Timberline",
+    "budget": null
+   },
+   {
+    "task": "Electrical: Permit, Connection Fee, Installation",
+    "assigned": "Nothwestern Energy",
+    "budget": 2500.0
+   },
+   {
+    "task": "Gas: Permit, Connection Fee, Installation",
+    "assigned": "N/A",
+    "budget": null
+   },
+   {
+    "task": "LPN: Tank installation, Hookup",
+    "assigned": "AWG",
+    "budget": null
+   },
+   {
+    "task": "Oil Tank Installation",
+    "assigned": "N/A",
+    "budget": null
+   },
+   {
+    "task": "Telecom Hookup",
+    "assigned": "N/A",
+    "budget": null
+   },
+   {
+    "task": "Other",
+    "assigned": "",
+    "budget": null
+   }
+  ]
+ },
+ {
+  "name": "EXCAVATION & EARTHWORK",
+  "tasks": [
+   {
+    "task": "Cut & Fill",
+    "assigned": "Iver's",
+    "budget": null
+   },
+   {
+    "task": "Blasting",
+    "assigned": "n/a",
+    "budget": null
+   },
+   {
+    "task": "Removal of Stone/Dirt",
+    "assigned": "Iver's",
+    "budget": null
+   },
+   {
+    "task": "Rough Grading",
+    "assigned": "Iver's",
+    "budget": null
+   },
+   {
+    "task": "Trenching For Utility Hookups",
+    "assigned": "AT Klemens",
+    "budget": null
+   },
+   {
+    "task": "Foundation Excavation",
+    "assigned": "Iver's",
+    "budget": null
+   },
+   {
+    "task": "Foundation Footing Drains",
+    "assigned": "Iver's",
+    "budget": 30000.0
+   },
+   {
+    "task": "Curtain Drains",
+    "assigned": "n/a",
+    "budget": null
+   },
+   {
+    "task": "Culverts",
+    "assigned": "n/a",
+    "budget": null
+   },
+   {
+    "task": "Swales",
+    "assigned": "n/a",
+    "budget": null
+   },
+   {
+    "task": "Retaining Walls",
+    "assigned": "n/a",
+    "budget": null
+   },
+   {
+    "task": "Ponds",
+    "assigned": "n/a",
+    "budget": null
+   },
+   {
+    "task": "Other Site Drainage",
+    "assigned": "",
+    "budget": null
+   },
+   {
+    "task": "Backfill",
+    "assigned": "Greenup",
+    "budget": null
+   },
+   {
+    "task": "Compaction",
+    "assigned": "Greenup",
+    "budget": null
+   },
+   {
+    "task": "Top Soil",
+    "assigned": "Greenup",
+    "budget": null
+   },
+   {
+    "task": "Finish Grading",
+    "assigned": "Greenup",
+    "budget": null
+   },
+   {
+    "task": "Seeding/Sod",
+    "assigned": "Greenup",
+    "budget": null
+   },
+   {
+    "task": "Other",
+    "assigned": "",
+    "budget": null
+   }
+  ]
+ },
+ {
+  "name": "FOUNDATION",
+  "tasks": [
+   {
+    "task": "Footings/Pads",
+    "assigned": "Iver's",
+    "budget": null
+   },
+   {
+    "task": "Foundation walls/stem walls/grade beams",
+    "assigned": "Iver's",
+    "budget": null
+   },
+   {
+    "task": "Piers",
+    "assigned": "Iver's",
+    "budget": null
+   },
+   {
+    "task": "Slabs - Foundation, Basement, Garage",
+    "assigned": "Iver's",
+    "budget": null
+   },
+   {
+    "task": "Steel Reinforcing",
+    "assigned": "Iver's",
+    "budget": null
+   },
+   {
+    "task": "Anchor Bolts, Hold Downs",
+    "assigned": "Iver's",
+    "budget": null
+   },
+   {
+    "task": "Buikheads",
+    "assigned": "N/A",
+    "budget": null
+   },
+   {
+    "task": "Sub-Slab Vapor Barrier",
+    "assigned": "Iver's",
+    "budget": null
+   },
+   {
+    "task": "Sump Pump",
+    "assigned": "Iver's",
+    "budget": null
+   },
+   {
+    "task": "Crawlspace Vapor Barrier",
+    "assigned": "N/A",
+    "budget": null
+   },
+   {
+    "task": "Crawlspace Vents",
+    "assigned": "N/A",
+    "budget": null
+   },
+   {
+    "task": "Foundation Windows",
+    "assigned": "N/A",
+    "budget": null
+   },
+   {
+    "task": "Damproofing, Water-proofing",
+    "assigned": "Iver's",
+    "budget": null
+   },
+   {
+    "task": "Foundation Drain Board",
+    "assigned": "N/A",
+    "budget": null
+   },
+   {
+    "task": "Slab insulation: Edge/Blow",
+    "assigned": "N/A",
+    "budget": null
+   },
+   {
+    "task": "Exterior Foundation Insulation",
+    "assigned": "N/A",
+    "budget": null
+   },
+   {
+    "task": "Exterior Insulation Coating/ Protection",
+    "assigned": "",
+    "budget": null
+   },
+   {
+    "task": "Other",
+    "assigned": "",
+    "budget": 93000.0
+   }
+  ]
+ },
+ {
+  "name": "OTHER MASONRY/PAVING",
+  "tasks": [
+   {
+    "task": "Patios",
+    "assigned": "n/a",
+    "budget": null
+   },
+   {
+    "task": "Exterior Stairs",
+    "assigned": "n/a",
+    "budget": null
+   },
+   {
+    "task": "Masonry Chimneys",
+    "assigned": "n/a",
+    "budget": null
+   },
+   {
+    "task": "Fireplaces/Hearths",
+    "assigned": "n/a",
+    "budget": null
+   },
+   {
+    "task": "Driveway",
+    "assigned": "",
+    "budget": null
+   },
+   {
+    "task": "Walkways",
+    "assigned": "",
+    "budget": null
+   },
+   {
+    "task": "Other",
+    "assigned": "Kennels",
+    "budget": 40000.0
+   }
+  ]
+ },
+ {
+  "name": "ROUGH FRAMING",
+  "tasks": [
+   {
+    "task": "Sill & Seal",
+    "assigned": "MQS",
+    "budget": null
+   },
+   {
+    "task": "Steel/Wood Carrying Beam, Lolly Columns",
+    "assigned": "MQS",
+    "budget": null
+   },
+   {
+    "task": "Floor Framing",
+    "assigned": "N/A",
+    "budget": 0.0
+   },
+   {
+    "task": "Exterior & Interior Walls, Rough Stairs",
+    "assigned": "MQS",
+    "budget": null
+   },
+   {
+    "task": "Sheathing, Subflooring",
+    "assigned": "MQS",
+    "budget": null
+   },
+   {
+    "task": "Roof Framing/Trusses",
+    "assigned": "MQS",
+    "budget": null
+   },
+   {
+    "task": "Subfascia",
+    "assigned": "MQS",
+    "budget": null
+   },
+   {
+    "task": "Steel Framing Connectors",
+    "assigned": "MQS",
+    "budget": null
+   },
+   {
+    "task": "Nails, Screws, Fasteners",
+    "assigned": "MQS",
+    "budget": null
+   },
+   {
+    "task": "Prep for Plaster, Drywall",
+    "assigned": "MQS",
+    "budget": null
+   },
+   {
+    "task": "Rough Framing - Labor Only",
+    "assigned": "MQS",
+    "budget": 167000.0
+   },
+   {
+    "task": "Other",
+    "assigned": "INT Frame",
+    "budget": 42000.0
+   }
+  ]
+ },
+ {
+  "name": "EXTERIOR",
+  "tasks": [
+   {
+    "task": "Exterior Foam Sheathing",
+    "assigned": "MQS",
+    "budget": null
+   },
+   {
+    "task": "Weather Barrier (Tyvek, etc.)",
+    "assigned": "MQS",
+    "budget": null
+   },
+   {
+    "task": "Membrance & Flashing",
+    "assigned": "",
+    "budget": null
+   },
+   {
+    "task": "Vinyl or Composite Siding",
+    "assigned": "n/a",
+    "budget": null
+   },
+   {
+    "task": "Wood Siding",
+    "assigned": "n/a",
+    "budget": null
+   },
+   {
+    "task": "Brick Veneer",
+    "assigned": "n/a",
+    "budget": null
+   },
+   {
+    "task": "Stone Veneer",
+    "assigned": "n/a",
+    "budget": null
+   },
+   {
+    "task": "Stucco",
+    "assigned": "n/a",
+    "budget": null
+   },
+   {
+    "task": "Fascia, Frieze, Corner Boards, Water Table",
+    "assigned": "MQS",
+    "budget": null
+   },
+   {
+    "task": "Soffit/Gable Vents",
+    "assigned": "MQS",
+    "budget": null
+   },
+   {
+    "task": "Window/Door Trim",
+    "assigned": "MQS",
+    "budget": null
+   },
+   {
+    "task": "Other Exterior Trim",
+    "assigned": "MQS",
+    "budget": null
+   },
+   {
+    "task": "Exterior Paint, Stain, Caulk",
+    "assigned": "MQS",
+    "budget": null
+   },
+   {
+    "task": "Exterior, labor-only",
+    "assigned": "MQS",
+    "budget": null
+   },
+   {
+    "task": "Other",
+    "assigned": "",
+    "budget": null
+   }
+  ]
+ },
+ {
+  "name": "WINDOWS/EXTERIOR DOORS",
+  "tasks": [
+   {
+    "task": "Membrane & Flashing",
+    "assigned": "",
+    "budget": 0.0
+   },
+   {
+    "task": "Exterior doors, prehung",
+    "assigned": "O Double G",
+    "budget": 3600.0
+   },
+   {
+    "task": "Exterior door slabs",
+    "assigned": "",
+    "budget": 0.0
+   },
+   {
+    "task": "Exterior door frames, sills",
+    "assigned": "",
+    "budget": 0.0
+   },
+   {
+    "task": "Sidelights, transoms",
+    "assigned": "",
+    "budget": 0.0
+   },
+   {
+    "task": "Locksets, knobs, door hardware",
+    "assigned": "",
+    "budget": 17188.0
+   },
+   {
+    "task": "Patio doors: sliding or hinged",
+    "assigned": "",
+    "budget": 0.0
+   },
+   {
+    "task": "Windows",
+    "assigned": "O Double G",
+    "budget": 9538.0
+   },
+   {
+    "task": "Garage Doors & Opener",
+    "assigned": "N/A",
+    "budget": 0.0
+   },
+   {
+    "task": "Other",
+    "assigned": "",
+    "budget": null
+   }
+  ]
+ },
+ {
+  "name": "PLUMBING",
+  "tasks": [
+   {
+    "task": "Drain/Waste/Vent",
+    "assigned": "",
+    "budget": null
+   },
+   {
+    "task": "Water Supply Piping",
+    "assigned": "",
+    "budget": null
+   },
+   {
+    "task": "Gas Piping",
+    "assigned": "",
+    "budget": null
+   },
+   {
+    "task": "Water Treatment",
+    "assigned": "",
+    "budget": null
+   },
+   {
+    "task": "Water Heater",
+    "assigned": "",
+    "budget": null
+   },
+   {
+    "task": "Fixtures: Toilets, Tubs, Sinks, Showers",
+    "assigned": "",
+    "budget": null
+   },
+   {
+    "task": "Faucets, Mixing Valves, Shower Heads",
+    "assigned": "",
+    "budget": null
+   },
+   {
+    "task": "Disposal",
+    "assigned": "",
+    "budget": null
+   },
+   {
+    "task": "Other",
+    "assigned": "",
+    "budget": 687000.0
+   }
+  ]
+ },
+ {
+  "name": "ELECTRICAL",
+  "tasks": [
+   {
+    "task": "Service, Panel, Sub-Panels",
+    "assigned": "",
+    "budget": null
+   },
+   {
+    "task": "Rough Wiring",
+    "assigned": "",
+    "budget": null
+   },
+   {
+    "task": "Phone, Cable, Internet Wiring",
+    "assigned": "",
+    "budget": null
+   },
+   {
+    "task": "Lighting Fixtures",
+    "assigned": "",
+    "budget": null
+   },
+   {
+    "task": "Low-Voltage Fixtures/Transformers",
+    "assigned": "",
+    "budget": null
+   },
+   {
+    "task": "Exterior Lighting",
+    "assigned": "",
+    "budget": null
+   },
+   {
+    "task": "Devices: outlets, switches, dimmers",
+    "assigned": "",
+    "budget": null
+   },
+   {
+    "task": "Lighting control system",
+    "assigned": "",
+    "budget": null
+   },
+   {
+    "task": "Doorbell System",
+    "assigned": "",
+    "budget": null
+   },
+   {
+    "task": "Smoke, CO2 Alarms",
+    "assigned": "",
+    "budget": null
+   },
+   {
+    "task": "Intercom system",
+    "assigned": "",
+    "budget": null
+   },
+   {
+    "task": "Security system",
+    "assigned": "",
+    "budget": null
+   },
+   {
+    "task": "Home theater/Entertainment",
+    "assigned": "",
+    "budget": null
+   },
+   {
+    "task": "Other",
+    "assigned": "",
+    "budget": 46300.0
+   }
+  ]
+ },
+ {
+  "name": "HVAC",
+  "tasks": [
+   {
+    "task": "Furnace/Heat Pump",
+    "assigned": "",
+    "budget": null
+   },
+   {
+    "task": "Central AC",
+    "assigned": "",
+    "budget": null
+   },
+   {
+    "task": "Air Handler",
+    "assigned": "",
+    "budget": null
+   },
+   {
+    "task": "Ductwork, Grilles, Registers",
+    "assigned": "",
+    "budget": null
+   },
+   {
+    "task": "Air Filter",
+    "assigned": "",
+    "budget": null
+   },
+   {
+    "task": "Boiler, Piping",
+    "assigned": "",
+    "budget": null
+   },
+   {
+    "task": "Radiators",
+    "assigned": "",
+    "budget": null
+   },
+   {
+    "task": "Whole-House Ventilation (HRV, ERV, Exhaust Only, Other)",
+    "assigned": "",
+    "budget": null
+   },
+   {
+    "task": "HVAC Controls",
+    "assigned": "",
+    "budget": null
+   },
+   {
+    "task": "Solar hot water",
+    "assigned": "",
+    "budget": null
+   },
+   {
+    "task": "Other",
+    "assigned": "",
+    "budget": 77800.0
+   }
+  ]
+ },
+ {
+  "name": "INSULATION & AIR-SEALING",
+  "tasks": [
+   {
+    "task": "Roof/Attic Insulation",
+    "assigned": "Treasure State",
+    "budget": 7488.0
+   },
+   {
+    "task": "Roof/Eave Baffles",
+    "assigned": "Treasure State",
+    "budget": 1248.0
+   },
+   {
+    "task": "Wall Cavity Insulation",
+    "assigned": "Treasure State",
+    "budget": 3325.0
+   },
+   {
+    "task": "Foam Board Insulation",
+    "assigned": "Treasure State",
+    "budget": 2494.0
+   },
+   {
+    "task": "Spray Foam Insulation",
+    "assigned": "Treasure State",
+    "budget": null
+   },
+   {
+    "task": "Basement Insulation",
+    "assigned": "N/A",
+    "budget": null
+   },
+   {
+    "task": "Crawlspace Insulation",
+    "assigned": "N/A",
+    "budget": null
+   },
+   {
+    "task": "Air Sealing",
+    "assigned": "N/A",
+    "budget": null
+   },
+   {
+    "task": "Energy Diagnostics (Blower Door, Infrared)",
+    "assigned": "N/A",
+    "budget": null
+   },
+   {
+    "task": "Other",
+    "assigned": "",
+    "budget": null
+   }
+  ]
+ },
+ {
+  "name": "DRYWALL/PLASTER",
+  "tasks": [
+   {
+    "task": "Walls",
+    "assigned": "",
+    "budget": null
+   },
+   {
+    "task": "Ceilings, Soffits",
+    "assigned": "",
+    "budget": null
+   },
+   {
+    "task": "Decorative Plaster",
+    "assigned": "",
+    "budget": null
+   },
+   {
+    "task": "Drywall Labor Only",
+    "assigned": "",
+    "budget": 40000.0
+   },
+   {
+    "task": "Other",
+    "assigned": "Paint",
+    "budget": 20000.0
+   }
+  ]
+ },
+ {
+  "name": "INTERIOR FINISH",
+  "tasks": [
+   {
+    "task": "Interior Doors, prehung",
+    "assigned": "D Double G",
+    "budget": 9520.0
+   },
+   {
+    "task": "Interior Door slabs",
+    "assigned": "",
+    "budget": null
+   },
+   {
+    "task": "Interior Door frames, thresholds",
+    "assigned": "",
+    "budget": null
+   },
+   {
+    "task": "Door knobs, hardware",
+    "assigned": "D Double G",
+    "budget": 17188.0
+   },
+   {
+    "task": "Chair Rail, Other",
+    "assigned": "",
+    "budget": null
+   },
+   {
+    "task": "Wainscotting, Paneling",
+    "assigned": "",
+    "budget": null
+   },
+   {
+    "task": "Built-in Shelving, Cabinets",
+    "assigned": "",
+    "budget": null
+   },
+   {
+    "task": "Closet Shelving, Hardware",
+    "assigned": "",
+    "budget": null
+   },
+   {
+    "task": "Stairs, Railings, Newels",
+    "assigned": "",
+    "budget": null
+   },
+   {
+    "task": "Interior Painting, Staining",
+    "assigned": "",
+    "budget": null
+   },
+   {
+    "task": "Wood Flooring",
+    "assigned": "",
+    "budget": null
+   },
+   {
+    "task": "Carpeting",
+    "assigned": "",
+    "budget": null
+   },
+   {
+    "task": "Resilient/Vinyl Flooring",
+    "assigned": "Abby's Floors",
+    "budget": null
+   },
+   {
+    "task": "Other Flooring",
+    "assigned": "Epoxy",
+    "budget": null
+   },
+   {
+    "task": "Acoustical, Metal, Decorative Ceilings",
+    "assigned": "",
+    "budget": null
+   },
+   {
+    "task": "Interior Carpentry Labor Only",
+    "assigned": "",
+    "budget": null
+   }
+  ]
+ },
+ {
+  "name": "KITCHEN & BATH",
+  "tasks": [
+   {
+    "task": "Kitchen Cabinets",
+    "assigned": "Home Depot",
+    "budget": null
+   },
+   {
+    "task": "Bath Cabinets",
+    "assigned": "Home Depot",
+    "budget": null
+   },
+   {
+    "task": "Cabinet Pulls, Hardware",
+    "assigned": "n/a",
+    "budget": null
+   },
+   {
+    "task": "Countertop, Backsplash",
+    "assigned": "Home Depot",
+    "budget": null
+   },
+   {
+    "task": "Ceramic Tile, Stone",
+    "assigned": "n/a",
+    "budget": null
+   },
+   {
+    "task": "Raised Tub Platform",
+    "assigned": "n/a",
+    "budget": null
+   },
+   {
+    "task": "Tub Enclosure",
+    "assigned": "n/a",
+    "budget": null
+   },
+   {
+    "task": "Shower enclosure/doors",
+    "assigned": "n/a",
+    "budget": null
+   },
+   {
+    "task": "Medicine Cabinets",
+    "assigned": "n/a",
+    "budget": null
+   },
+   {
+    "task": "Mirrors",
+    "assigned": "Home Depot",
+    "budget": null
+   },
+   {
+    "task": "Towel hangers, toilet paper holders, accessories",
+    "assigned": "home Depot",
+    "budget": null
+   },
+   {
+    "task": "K&B Labor Only",
+    "assigned": "",
+    "budget": null
+   },
+   {
+    "task": "Other",
+    "assigned": "",
+    "budget": null
+   }
+  ]
+ },
+ {
+  "name": "PORCHES & DECKS",
+  "tasks": [
+   {
+    "task": "Open Porch",
+    "assigned": "n/a",
+    "budget": null
+   },
+   {
+    "task": "Screen Porch",
+    "assigned": "n/a",
+    "budget": null
+   },
+   {
+    "task": "Wood or Composite Deck",
+    "assigned": "n/a",
+    "budget": null
+   },
+   {
+    "task": "Fencing",
+    "assigned": "Feeler Fencing",
+    "budget": 55000.0
+   },
+   {
+    "task": "Other Outdoor Structures",
+    "assigned": "n/a",
+    "budget": null
+   },
+   {
+    "task": "Other",
+    "assigned": "n/a",
+    "budget": null
+   }
+  ]
+ },
+ {
+  "name": "APPLIANCES",
+  "tasks": [
+   {
+    "task": "Refrigerator",
+    "assigned": "",
+    "budget": null
+   },
+   {
+    "task": "Range, Cooktop",
+    "assigned": "",
+    "budget": null
+   },
+   {
+    "task": "Microwave",
+    "assigned": "",
+    "budget": null
+   },
+   {
+    "task": "Range Hood",
+    "assigned": "",
+    "budget": null
+   },
+   {
+    "task": "Dishwasher",
+    "assigned": "",
+    "budget": null
+   },
+   {
+    "task": "Washer/Dryer",
+    "assigned": "",
+    "budget": null
+   },
+   {
+    "task": "Other",
+    "assigned": "",
+    "budget": null
+   }
+  ]
+ }
+]

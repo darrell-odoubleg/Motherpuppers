@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Project Activity</title>
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+<header class="top">
+  <div class="top-row">
+    <div class="brand">Mother Puppers<small>Construction project — recent changes</small></div>
+    <a href="/" class="btn">← Back to project</a>
+  </div>
+</header>
+<main>
+  <section class="panel">
+    <table class="list">
+      <thead><tr><th>When</th><th>Who</th><th>Section</th><th>Line item</th><th>Field</th><th>From</th><th>To</th></tr></thead>
+      <tbody id="rows"><tr><td colspan="7" class="muted">Loading…</td></tr></tbody>
+    </table>
+  </section>
+</main>
+<script>
+const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const LABELS = { task: 'Task', assigned: 'Assigned to', start_date: 'Start date', end_date: 'End date', status: 'Status', budget: 'Budget', paid: 'Already paid', comments: 'Comments' };
+fetch('/api/activity?limit=500').then((r) => { if (r.status === 401) location.href = '/'; return r.json(); }).then((rows) => {
+  document.getElementById('rows').innerHTML = rows.length ? rows.map((a) => `<tr>
+    <td style="white-space:nowrap">${new Date(a.at).toLocaleString()}</td><td>${esc(a.user_name)}</td><td>${esc(a.section)}</td><td>${esc(a.task)}</td>
+    <td>${esc(LABELS[a.field] || a.field)}</td><td class="muted">${esc(a.old_value)}</td><td>${esc(a.new_value)}</td></tr>`).join('')
+    : '<tr><td colspan="7" class="muted">No changes yet.</td></tr>';
+});
+</script>
+</body>
+</html>

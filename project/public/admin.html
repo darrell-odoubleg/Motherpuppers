@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Project Admin</title>
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+<header class="top">
+  <div class="top-row">
+    <div class="brand">Mother Puppers<small>Construction project — admin</small></div>
+    <a href="/" class="btn">← Back to project</a>
+  </div>
+</header>
+<main>
+  <div id="denied" class="panel hidden">Admins only. <a href="/">Go back</a>.</div>
+  <div id="admin" class="hidden">
+    <section class="panel">
+      <h2>Add a person</h2>
+      <form id="addUser" class="form-row">
+        <input type="text" id="nName" placeholder="Name" required>
+        <input type="text" id="nUser" placeholder="Username" autocapitalize="none" required>
+        <input type="password" id="nPass" placeholder="Password (6+)" autocomplete="new-password" required>
+        <label class="chk"><input type="checkbox" id="nEdit" checked> Can edit</label>
+        <label class="chk"><input type="checkbox" id="nAdmin"> Admin</label>
+        <button class="btn primary" type="submit">Add</button>
+      </form>
+      <div class="err" id="addErr"></div>
+    </section>
+    <section class="panel">
+      <h2>People</h2>
+      <table class="list">
+        <thead><tr><th>Name</th><th>Username</th><th>Can edit</th><th>Admin</th><th>Active</th><th></th></tr></thead>
+        <tbody id="users"></tbody>
+      </table>
+      <p class="muted">View-only people can see everything but can't change it. Turning off "Active" blocks sign-in.</p>
+    </section>
+  </div>
+</main>
+<div class="toast hidden" id="toast"></div>
+<script>
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+async function api(url, opts = {}) {
+  const r = await fetch(url, { headers: { 'Content-Type': 'application/json' }, ...opts, body: opts.body ? JSON.stringify(opts.body) : undefined });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(j.error || `Error ${r.status}`);
+  return j;
+}
+function toast(m) { const t = $('#toast'); t.textContent = m; t.classList.remove('hidden'); clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.add('hidden'), 2600); }
+
+async function loadUsers() {
+  const users = await api('/api/admin/users');
+  $('#users').innerHTML = users.map((u) => `<tr data-id="${u.id}">
+    <td>${esc(u.name)}</td><td>${esc(u.username)}</td>
+    <td><input type="checkbox" data-f="can_edit" ${u.can_edit ? 'checked' : ''}></td>
+    <td><input type="checkbox" data-f="is_admin" ${u.is_admin ? 'checked' : ''}></td>
+    <td><input type="checkbox" data-f="active" ${u.active ? 'checked' : ''}></td>
+    <td><button class="btn small" data-pw="${u.id}">Reset password</button></td></tr>`).join('');
+}
+
+$('#users').addEventListener('change', async (e) => {
+  const id = e.target.closest('tr').dataset.id;
+  try { await api(`/api/admin/users/${id}`, { method: 'PATCH', body: { [e.target.dataset.f]: e.target.checked } }); toast('Saved'); }
+  catch (err) { toast(err.message); loadUsers(); }
+});
+$('#users').addEventListener('click', async (e) => {
+  const id = e.target.dataset.pw;
+  if (!id) return;
+  const pw = prompt('New password (6+ characters):');
+  if (!pw) return;
+  try { await api(`/api/admin/users/${id}`, { method: 'PATCH', body: { password: pw } }); toast('Password changed'); }
+  catch (err) { toast(err.message); }
+});
+$('#addUser').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  $('#addErr').textContent = '';
+  try {
+    await api('/api/admin/users', { method: 'POST', body: { name: $('#nName').value, username: $('#nUser').value, password: $('#nPass').value, can_edit: $('#nEdit').checked, is_admin: $('#nAdmin').checked } });
+    e.target.reset(); $('#nEdit').checked = true;
+    loadUsers(); toast('Added');
+  } catch (err) { $('#addErr').textContent = err.message; }
+});
+
+api('/api/me').then((me) => {
+  if (!me.is_admin) return $('#denied').classList.remove('hidden');
+  $('#admin').classList.remove('hidden');
+  loadUsers();
+}).catch(() => { location.href = '/'; });
+</script>
+</body>
+</html>
