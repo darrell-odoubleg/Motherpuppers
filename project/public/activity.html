@@ -26,7 +26,7 @@
 </main>
 <script>
 const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const LABELS = { task: 'Task', assigned: 'Assigned to', start_date: 'Start date', end_date: 'End date', status: 'Status', budget: 'Budget', paid: 'Already paid', comments: 'Comments' };
+const LABELS = { task: 'Task', assigned: 'Assigned to', start_date: 'Start date', end_date: 'End date', status: 'Status', budget: 'Budget', paid: 'Already paid', comments: 'Comments', moved: 'Moved' };
 fetch('/api/activity?limit=500').then((r) => { if (r.status === 401) location.href = '/'; return r.json(); }).then((rows) => {
   document.getElementById('rows').innerHTML = rows.length ? rows.map((a) => `<tr>
     <td style="white-space:nowrap">${new Date(a.at).toLocaleString()}</td><td>${esc(a.user_name)}</td><td>${esc(a.section)}</td><td>${esc(a.task)}</td>

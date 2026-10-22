@@ -118,7 +118,7 @@ table.grid { width: 100%; border-collapse: collapse; table-layout: fixed; }
 .grid tr.na td { opacity: .55; }
 .grid tfoot td { font-weight: 700; background: var(--box); padding: 6px; border-top: 1px solid var(--line); }
 .col-task { width: 22%; } .col-asg { width: 13%; } .col-date { width: 118px; } .col-status { width: 116px; }
-.col-money { width: 112px; } .col-com { width: auto; } .col-x { width: 30px; }
+.col-money { width: 112px; } .col-com { width: auto; } .col-x { width: 30px; } .col-grip { width: 26px; }
 
 /* inline-edit cells look like text until focused */
 input.cell, textarea.cell {
@@ -147,6 +147,16 @@ select.status[data-s="Complete"] { color: var(--s-complete); }
 select.status[data-s="N/A"] { color: var(--s-na); }
 select.status option { color: var(--ink); background: var(--card); }
 
+/* drag to arrange */
+.grip { border: 0; background: transparent; color: var(--muted); cursor: grab; font-size: 16px; line-height: 1; padding: 6px 4px; border-radius: 6px; touch-action: none; }
+.grip:hover, .grip:focus-visible { color: var(--accent); background: var(--box); }
+.grid td.t-grip { padding: 0 0 0 4px; }
+tr.dragging { background: color-mix(in srgb, var(--accent) 12%, var(--card)); box-shadow: inset 3px 0 0 var(--accent); }
+tr.dragging td { opacity: 1 !important; }
+tr.dragging .grip { color: var(--accent); }
+body.is-dragging, body.is-dragging * { cursor: grabbing !important; user-select: none; -webkit-user-select: none; }
+body.is-dragging tr.dragging { pointer-events: none; }
+.sec-head.drop { background: color-mix(in srgb, var(--accent) 16%, var(--card)); box-shadow: inset 0 0 0 2px var(--accent); }
 .x { border: 0; background: transparent; color: var(--muted); cursor: pointer; font-size: 16px; line-height: 1; padding: 4px; border-radius: 6px; }
 .x:hover { color: var(--warn); background: var(--box); }
 .who { font-size: 11px; color: var(--muted); padding: 0 6px 4px; }
@@ -184,7 +194,8 @@ select.status option { color: var(--ink); background: var(--card); }
   .grid tbody tr:last-child { border-bottom: 0; }
   .grid td { border: 0; padding: 0; }
   .grid td[data-l]::before { content: attr(data-l); display: block; font-size: 10px; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); padding: 2px 6px 0; }
-  .grid td.t-task { grid-column: 1 / -1; padding-right: 30px; }
+  .grid td.t-task { grid-column: 1 / -1; padding-right: 60px; }
+  .grid td.t-grip { position: absolute; top: 4px; right: 32px; width: auto; padding: 0; }
   .grid td.t-task .cell { font-weight: 600; }
   .grid td.t-com { grid-column: 1 / -1; }
   .grid td.t-x { position: absolute; top: 6px; right: 6px; width: auto; }

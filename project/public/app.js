@@ -125,7 +125,7 @@ function renderSectionTotals(sec, el) {
   const done = live.filter((t) => t.status === 'Complete').length;
   $('.meta', el).textContent = `${done}/${live.length} complete`;
   const f = $('tfoot', el);
-  if (f) f.innerHTML = `<tr><td colspan="5" data-l="">Section total</td><td class="num">${money(s.budget)}</td><td class="num">${money(s.paid)}</td><td class="num">${money(s.due)}</td><td colspan="2"></td></tr>`;
+  if (f) f.innerHTML = `<tr><td colspan="6" data-l="">Section total</td><td class="num">${money(s.budget)}</td><td class="num">${money(s.paid)}</td><td class="num">${money(s.due)}</td><td colspan="2"></td></tr>`;
 }
 
 // ---------- render ----------
@@ -135,6 +135,7 @@ function row(t) {
   const statusOpts = data.statuses.map((s) => `<option value="${esc(s)}" ${s === t.status ? 'selected' : ''}>${esc(s || '— status —')}</option>`).join('');
   const who = t.updated_by_name && t.updated_at ? `${esc(t.updated_by_name)} · ${new Date(t.updated_at).toLocaleDateString()}` : '';
   return `<tr data-id="${t.id}" class="${isNA(t) ? 'na' : ''}">
+    <td class="t-grip">${canEdit && !filtering() ? `<button class="grip" type="button" title="Drag to move (or focus and use ↑ ↓)" aria-label="Move ${esc(t.task)}">⠿</button>` : ''}</td>
     <td class="t-task"><input class="cell" data-f="task" value="${esc(t.task)}" ${dis} aria-label="Task"></td>
     <td data-l="Assigned to"><input class="cell" data-f="assigned" value="${esc(t.assigned)}" ${dis} placeholder="${canEdit ? '—' : ''}" aria-label="Assigned to"></td>
     <td data-l="Start"><input type="date" class="cell ${t.start_date ? '' : 'empty'}" data-f="start_date" value="${esc(t.start_date)}" ${dis} aria-label="Start date"></td>
@@ -170,8 +171,8 @@ function render() {
       </div>
       <div class="sec-body">
         <table class="grid">
-          <colgroup><col class="col-task"><col class="col-asg"><col class="col-date"><col class="col-date"><col class="col-status"><col class="col-money"><col class="col-money"><col class="col-money"><col class="col-com"><col class="col-x"></colgroup>
-          <thead><tr><th>Task</th><th>Assigned to</th><th>Start date</th><th>End date</th><th>Status</th><th class="num">Budget</th><th class="num">Already paid</th><th class="num">Due</th><th>Comments</th><th></th></tr></thead>
+          <colgroup><col class="col-grip"><col class="col-task"><col class="col-asg"><col class="col-date"><col class="col-date"><col class="col-status"><col class="col-money"><col class="col-money"><col class="col-money"><col class="col-com"><col class="col-x"></colgroup>
+          <thead><tr><th></th><th>Task</th><th>Assigned to</th><th>Start date</th><th>End date</th><th>Status</th><th class="num">Budget</th><th class="num">Already paid</th><th class="num">Due</th><th>Comments</th><th></th></tr></thead>
           <tbody>${rows.map(row).join('')}</tbody>
           <tfoot></tfoot>
         </table>
@@ -320,6 +321,122 @@ sectionsEl.addEventListener('change', async (e) => {
 // comments box grows to fit its text
 sectionsEl.addEventListener('input', (e) => {
   if (e.target.tagName === 'TEXTAREA') { e.target.style.height = 'auto'; e.target.style.height = e.target.scrollHeight + 2 + 'px'; }
+});
+
+// ---------- drag to arrange ----------
+// Grab the ⠿ handle and drag (mouse or finger). Drop between rows of any open section,
+// or on a collapsed section's header to send the item to the end of that section.
+let drag = null;
+
+async function saveOrder(tr, fromSid) {
+  const secEl = tr.closest('.sec');
+  const toSid = Number(secEl.dataset.sid);
+  const ids = [...tr.parentElement.children].map((r) => Number(r.dataset.id));
+  const from = data.sections.find((s) => s.id === fromSid);
+  const to = data.sections.find((s) => s.id === toSid);
+  if (fromSid === toSid && ids.every((id, i) => from.tasks[i] && from.tasks[i].id === id)) return;
+  try {
+    await api(`/api/sections/${toSid}/order`, { method: 'PUT', body: { ids, moved: Number(tr.dataset.id) } });
+    const task = from.tasks.find((t) => t.id === Number(tr.dataset.id));
+    if (from !== to) from.tasks = from.tasks.filter((t) => t !== task);
+    const byId = new Map([...to.tasks, task].map((t) => [t.id, t]));
+    to.tasks = ids.map((id) => byId.get(id));
+    task.section_id = toSid;
+    renderSectionTotals(to, secEl);
+    if (from !== to) {
+      const fromEl = sectionsEl.querySelector(`.sec[data-sid="${fromSid}"]`);
+      if (fromEl) renderSectionTotals(from, fromEl);
+      if (!secEl.classList.contains('open')) toast(`Moved to ${to.name}`);
+    }
+    renderTotals();
+  } catch (err) {
+    toast(err.message);
+    load();
+  }
+}
+
+function dropTargetAt(x, y) {
+  const el = document.elementFromPoint(x, y);
+  if (!el) return null;
+  const head = el.closest('.sec:not(.open) .sec-head');
+  if (head) return { head };
+  const row = el.closest('.sec.open tbody tr');
+  if (row && row !== drag.tr) return { row, after: y > row.getBoundingClientRect().top + row.offsetHeight / 2 };
+  const sec = el.closest('.sec.open');
+  if (sec && !row) return { tbody: $('tbody', sec) };
+  return null;
+}
+
+function endDrag(cancel) {
+  if (!drag) return;
+  const d = drag;
+  drag = null;
+  cancelAnimationFrame(d.raf);
+  d.tr.classList.remove('dragging');
+  document.body.classList.remove('is-dragging');
+  sectionsEl.querySelectorAll('.drop').forEach((h) => h.classList.remove('drop'));
+  if (cancel) {
+    d.home.parent.insertBefore(d.tr, d.home.next);
+    return;
+  }
+  if (d.overHead) $('tbody', d.overHead.closest('.sec')).appendChild(d.tr);
+  saveOrder(d.tr, d.fromSid);
+}
+
+sectionsEl.addEventListener('pointerdown', (e) => {
+  const grip = e.target.closest('.grip');
+  if (!grip || e.button !== 0) return;
+  e.preventDefault();
+  const tr = grip.closest('tr');
+  drag = {
+    tr, y: e.clientY, x: e.clientX, raf: 0, overHead: null,
+    fromSid: Number(tr.closest('.sec').dataset.sid),
+    home: { parent: tr.parentElement, next: tr.nextSibling },
+  };
+  tr.classList.add('dragging');
+  document.body.classList.add('is-dragging');
+  // keep the page scrolling when dragging near the top/bottom edge
+  const tick = () => {
+    if (!drag) return;
+    const edge = 90;
+    if (drag.y < edge) window.scrollBy(0, -Math.ceil((edge - drag.y) / 6));
+    else if (drag.y > innerHeight - 60) window.scrollBy(0, Math.ceil((drag.y - innerHeight + 60) / 6));
+    drag.raf = requestAnimationFrame(tick);
+  };
+  drag.raf = requestAnimationFrame(tick);
+});
+
+document.addEventListener('pointermove', (e) => {
+  if (!drag) return;
+  drag.x = e.clientX;
+  drag.y = e.clientY;
+  const t = dropTargetAt(e.clientX, e.clientY);
+  const head = t && t.head;
+  if (head !== drag.overHead) {
+    if (drag.overHead) drag.overHead.classList.remove('drop');
+    if (head) head.classList.add('drop');
+    drag.overHead = head || null;
+  }
+  if (!t || head) return;
+  if (t.row) t.row.parentElement.insertBefore(drag.tr, t.after ? t.row.nextSibling : t.row);
+  else if (t.tbody && drag.tr.parentElement !== t.tbody && !t.tbody.children.length) t.tbody.appendChild(drag.tr);
+});
+document.addEventListener('pointerup', () => endDrag(false));
+document.addEventListener('pointercancel', () => endDrag(true));
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && drag) endDrag(true); });
+
+// keyboard: focus the handle, then ↑ / ↓ moves the item one row within its section
+sectionsEl.addEventListener('keydown', (e) => {
+  const grip = e.target.closest('.grip');
+  if (!grip || (e.key !== 'ArrowUp' && e.key !== 'ArrowDown')) return;
+  e.preventDefault();
+  const tr = grip.closest('tr');
+  const sib = e.key === 'ArrowUp' ? tr.previousElementSibling : tr.nextElementSibling;
+  if (!sib) return;
+  tr.parentElement.insertBefore(tr, e.key === 'ArrowUp' ? sib : sib.nextSibling);
+  grip.focus();
+  clearTimeout(saveOrder.t);
+  saveOrder.t = setTimeout(() => saveOrder(tr, Number(tr.closest('.sec').dataset.sid)), 400);
 });
 
 $('#addSection').addEventListener('click', async () => {

@@ -178,6 +178,34 @@ app.delete('/api/tasks/:id', requireEditor, (req, res) => {
   res.json({ ok: true });
 });
 
+// Drag-to-arrange: ids is the full new order of one section. A task coming from
+// another section is moved into it; the source section's order is still valid.
+app.put('/api/sections/:id/order', requireEditor, (req, res) => {
+  const s = db.prepare('SELECT * FROM sections WHERE id = ?').get(req.params.id);
+  if (!s) return res.status(404).json({ error: 'Not found' });
+  const ids = Array.isArray((req.body || {}).ids) ? req.body.ids.map(Number) : null;
+  if (!ids || !ids.length || new Set(ids).size !== ids.length) return res.status(400).json({ error: 'Bad order' });
+  const find = db.prepare('SELECT t.id, t.task, t.section_id, s.name section_name FROM tasks t JOIN sections s ON s.id = t.section_id WHERE t.id = ?');
+  const before = ids.map((id) => find.get(id));
+  if (before.some((t) => !t)) return res.status(400).json({ error: 'Unknown line item — reload the page' });
+  const current = db.prepare('SELECT id FROM tasks WHERE section_id = ?').all(s.id).map((r) => r.id);
+  if (current.some((id) => !ids.includes(id))) return res.status(409).json({ error: 'This section changed — reload the page' });
+
+  const moved = before.find((t) => t.id === Number(req.body.moved));
+  const oldPos = moved && moved.section_id === s.id
+    ? db.prepare('SELECT COUNT(*) n FROM tasks WHERE section_id = ? AND (sort < (SELECT sort FROM tasks WHERE id = ?) OR (sort = (SELECT sort FROM tasks WHERE id = ?) AND id < ?))').get(s.id, moved.id, moved.id, moved.id).n + 1
+    : null;
+  const upd = db.prepare('UPDATE tasks SET section_id = ?, sort = ? WHERE id = ?');
+  db.transaction(() => {
+    ids.forEach((id, i) => upd.run(s.id, (i + 1) * 10, id));
+    if (moved) {
+      const from = moved.section_id === s.id ? `#${oldPos}` : `${moved.section_name}`;
+      logChange(req.user, s.name, moved.task, 'moved', from, `#${ids.indexOf(moved.id) + 1}${moved.section_id === s.id ? '' : ` in ${s.name}`}`);
+    }
+  })();
+  res.json({ ok: true });
+});
+
 app.post('/api/sections', requireEditor, (req, res) => {
   const name = String((req.body || {}).name || '').trim().slice(0, 200);
   if (!name) return res.status(400).json({ error: 'Name is required' });
