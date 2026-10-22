@@ -5,12 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Mother Puppers Cleaning</title>
 <link rel="stylesheet" href="/styles.css">
+<link rel="icon" type="image/png" href="/favicon.png">
+<link rel="apple-touch-icon" href="/icon.png">
+<meta name="theme-color" content="#7357a4">
 </head>
 <body>
 
 <div id="login" class="login-wrap hidden">
   <form class="login" id="loginForm">
-    <h1>Mother Puppers</h1>
+    <h1><picture><source srcset="/logo-dark.png" media="(prefers-color-scheme: dark)"><img class="login-logo" src="/logo.png" alt="Mother Puppers" width="640" height="334"></picture></h1>
     <p>Cleaning lists — sign in</p>
     <label for="u">Username</label>
     <input type="text" id="u" autocomplete="username" autocapitalize="none" required>
@@ -24,7 +27,7 @@
 <div id="app" class="hidden">
   <header class="top">
     <div class="top-row">
-      <div class="brand">Mother Puppers<small id="dateLine"></small></div>
+      <a class="brand" href="/"><picture><source srcset="/logo-dark.png" media="(prefers-color-scheme: dark)"><img class="logo" src="/logo.png" alt="Mother Puppers" width="640" height="334"></picture><small id="dateLine"></small></a>
       <input type="date" id="histDate" class="hidden" title="View a past day" style="width:auto">
       <a href="/admin" id="adminLink" class="btn hidden">Admin</a>
       <span class="me"><span class="dot" id="meDot"></span><span id="meName"></span></span>

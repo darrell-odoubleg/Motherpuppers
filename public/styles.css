@@ -1,25 +1,25 @@
 :root {
-  --bg: #f6f4ef;
+  --bg: #f7f5fa;
   --card: #ffffff;
-  --ink: #1f2328;
-  --muted: #6b6f76;
-  --line: #e3dfd6;
-  --accent: #8a4b2a;
+  --ink: #2a2a2a;
+  --muted: #6b6775;
+  --line: #e5e0ec;
+  --accent: #7357a4;
   --accent-ink: #ffffff;
-  --box: #fbfaf7;
+  --box: #faf8fc;
   --warn: #b42318;
   --ok: #1a7f37;
 }
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #17181a;
-    --card: #212226;
-    --ink: #ececec;
-    --muted: #a0a4ab;
-    --line: #34363b;
-    --accent: #d08a5f;
-    --accent-ink: #17181a;
-    --box: #2a2b30;
+    --bg: #17151c;
+    --card: #211e28;
+    --ink: #eeecf2;
+    --muted: #a49fae;
+    --line: #35313e;
+    --accent: #a78bdb;
+    --accent-ink: #17151c;
+    --box: #2a2632;
     --warn: #ff7b72;
     --ok: #56d364;
   }
@@ -35,6 +35,18 @@ body {
 button, input, select, textarea { font: inherit; color: inherit; }
 a { color: var(--accent); }
 .hidden { display: none !important; }
+
+/* Mother Puppers brand: logo from "Mother Puppers Logo Transparent Background 2026.png" */
+:root { --brand-purple: #7357a4; --brand-charcoal: #2a2a2a; --brand-tan: #d4a574; }
+.top { border-bottom: 3px solid var(--brand-purple); }
+.brand { display: flex; align-items: center; gap: 12px; text-decoration: none; color: var(--ink); }
+.brand .logo { height: 46px; width: auto; display: block; }
+.brand small { display: block; padding-left: 12px; border-left: 2px solid var(--brand-tan); }
+.login-logo { display: block; width: 100%; max-width: 260px; height: auto; margin: 0 auto 10px; }
+@media (max-width: 520px) {
+  .brand .logo { height: 36px; }
+  .brand small { font-size: 11px; padding-left: 8px; }
+}
 
 /* header */
 .top {
