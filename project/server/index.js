@@ -234,18 +234,107 @@ app.delete('/api/sections/:id', requireAdmin, (req, res) => {
   res.json({ ok: true });
 });
 
+// Exports only carry line items that have a price (budget or paid) filled in.
+function pricedRows() {
+  return db.prepare(`SELECT s.name section, t.* FROM tasks t JOIN sections s ON s.id = t.section_id
+    WHERE t.budget IS NOT NULL OR t.paid IS NOT NULL ORDER BY s.sort, s.id, t.sort, t.id`).all()
+    .map((r) => ({ ...r, due: (r.budget || 0) - (r.paid || 0) }));
+}
+const exportName = (ext) => `mother-puppers-construction-${new Date().toISOString().slice(0, 10)}.${ext}`;
+
 app.get('/api/export.csv', requireUser, (req, res) => {
-  const rows = db.prepare(`SELECT s.name section, t.* FROM tasks t JOIN sections s ON s.id = t.section_id ORDER BY s.sort, s.id, t.sort, t.id`).all();
   const q = (v) => `"${String(v == null ? '' : v).replace(/"/g, '""')}"`;
   const m = (c) => (c == null ? '' : (c / 100).toFixed(2));
   const lines = [['Section', 'Task', 'Assigned To', 'Start Date', 'End Date', 'Status', 'Budget', 'Already Paid', 'Due', 'Comments'].map(q).join(',')];
-  for (const r of rows) {
-    const due = r.budget == null && r.paid == null ? null : (r.budget || 0) - (r.paid || 0);
-    lines.push([r.section, r.task, r.assigned, r.start_date, r.end_date, r.status, m(r.budget), m(r.paid), m(due), r.comments].map(q).join(','));
+  for (const r of pricedRows()) {
+    lines.push([r.section, r.task, r.assigned, r.start_date, r.end_date, r.status, m(r.budget), m(r.paid), m(r.due), r.comments].map(q).join(','));
   }
   res.setHeader('Content-Type', 'text/csv; charset=utf-8');
-  res.setHeader('Content-Disposition', `attachment; filename="mother-puppers-construction-${new Date().toISOString().slice(0, 10)}.csv"`);
+  res.setHeader('Content-Disposition', `attachment; filename="${exportName('csv')}"`);
   res.send(lines.join('\r\n'));
+});
+
+app.get('/api/export.pdf', requireUser, (req, res) => {
+  const PDFDocument = require('pdfkit');
+  const rows = pricedRows();
+  const doc = new PDFDocument({ size: 'LETTER', layout: 'landscape', margin: 36, bufferPages: true,
+    info: { Title: 'Mother Puppers Construction — Priced Line Items' } });
+  res.setHeader('Content-Type', 'application/pdf');
+  res.setHeader('Content-Disposition', `attachment; filename="${exportName('pdf')}"`);
+  doc.pipe(res);
+
+  const PURPLE = '#7357a4', LINE = '#e5e0ec', MUTED = '#6b6775', INK = '#2a2a2a';
+  const left = 36, width = 720, bottom = 612 - 36 - 14;
+  const cols = [
+    { k: 'task', h: 'Task', w: 180 },
+    { k: 'assigned', h: 'Assigned to', w: 110 },
+    { k: 'status', h: 'Status', w: 66 },
+    { k: 'budget', h: 'Budget', w: 72, money: true },
+    { k: 'paid', h: 'Already paid', w: 72, money: true },
+    { k: 'due', h: 'Due', w: 72, money: true },
+    { k: 'comments', h: 'Comments', w: 148 },
+  ];
+  const PAD = 4;
+  const cellText = (r, c) => (c.money ? fmtMoney(r[c.k]) : String(r[c.k] || ''));
+  const sums = (list) => list.reduce((a, r) => ({ budget: a.budget + (r.budget || 0), paid: a.paid + (r.paid || 0), due: a.due + r.due }), { budget: 0, paid: 0, due: 0 });
+
+  function drawRow(cells, { bold, fill, color = INK, size = 8.5, header = true } = {}) {
+    doc.font(bold ? 'Helvetica-Bold' : 'Helvetica').fontSize(size);
+    const h = Math.max(...cols.map((c, i) => doc.heightOfString(cells[i] || ' ', { width: c.w - PAD * 2 }))) + PAD * 2;
+    if (doc.y + h > bottom) { doc.addPage(); if (header) drawHeader(); doc.font(bold ? 'Helvetica-Bold' : 'Helvetica').fontSize(size); }
+    const y = doc.y;
+    if (fill) doc.rect(left, y, width, h).fill(fill);
+    let x = left;
+    cols.forEach((c, i) => {
+      doc.fillColor(color).text(cells[i] || '', x + PAD, y + PAD, { width: c.w - PAD * 2, align: c.money ? 'right' : 'left' });
+      x += c.w;
+    });
+    doc.moveTo(left, y + h).lineTo(left + width, y + h).lineWidth(0.5).strokeColor(LINE).stroke();
+    doc.x = left;
+    doc.y = y + h;
+  }
+  const drawHeader = () => drawRow(cols.map((c) => c.h), { bold: true, fill: PURPLE, color: '#ffffff', size: 8 });
+
+  // title block
+  const logo = path.join(__dirname, '..', 'public', 'logo.png');
+  doc.image(logo, left, 30, { height: 48 });
+  doc.font('Helvetica-Bold').fontSize(16).fillColor(INK).text('Construction project — priced line items', left + 110, 38, { width: width - 110, align: 'right' });
+  doc.font('Helvetica').fontSize(9).fillColor(MUTED)
+    .text(`${rows.length} line items · exported ${new Date().toLocaleDateString('en-US', { timeZone: 'America/Denver', month: 'long', day: 'numeric', year: 'numeric' })}`, left + 110, 60, { width: width - 110, align: 'right' });
+  doc.x = left;
+  doc.y = 92;
+
+  const total = sums(rows);
+  if (!rows.length) {
+    doc.font('Helvetica').fontSize(11).fillColor(MUTED).text('No line items have a price yet.', left, doc.y);
+  } else {
+    drawHeader();
+    let i = 0;
+    while (i < rows.length) {
+      const section = rows[i].section;
+      const group = [];
+      while (i < rows.length && rows[i].section === section) group.push(rows[i++]);
+      if (doc.y + 40 > bottom) { doc.addPage(); drawHeader(); }
+      doc.font('Helvetica-Bold').fontSize(9.5).fillColor(PURPLE).text(section, left + PAD, doc.y + 6, { width: width - PAD * 2 });
+      doc.x = left;
+      doc.y += 2;
+      for (const r of group) drawRow(cols.map((c) => cellText(r, c)));
+      const s = sums(group);
+      drawRow(['Section total', '', '', fmtMoney(s.budget), fmtMoney(s.paid), fmtMoney(s.due), ''], { bold: true, fill: '#faf8fc' });
+    }
+    doc.y += 8;
+    drawRow(['Grand total', '', '', fmtMoney(total.budget), fmtMoney(total.paid), fmtMoney(total.due), ''], { bold: true, fill: PURPLE, color: '#ffffff', size: 9.5, header: false });
+  }
+
+  // page numbers
+  const range = doc.bufferedPageRange();
+  for (let p = range.start; p < range.start + range.count; p++) {
+    doc.switchToPage(p);
+    doc.page.margins.bottom = 0;
+    doc.font('Helvetica').fontSize(7.5).fillColor(MUTED)
+      .text(`Mother Puppers · page ${p + 1} of ${range.count}`, left, 612 - 30, { width, align: 'right', lineBreak: false });
+  }
+  doc.end();
 });
 
 // ---------- admin ----------
