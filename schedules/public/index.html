@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mother Puppers Schedule</title>
+<link rel="stylesheet" href="/styles.css">
+<link rel="icon" type="image/png" href="/favicon.png">
+<link rel="apple-touch-icon" href="/icon.png">
+<meta name="theme-color" content="#7357a4">
+</head>
+<body>
+
+<div id="login" class="login-wrap hidden">
+  <form class="login" id="loginForm">
+    <h1><picture><source srcset="/logo-dark.png" media="(prefers-color-scheme: dark)"><img class="login-logo" src="/logo.png" alt="Mother Puppers" width="640" height="334"></picture></h1>
+    <p>Work schedule — sign in with your cleaning list login</p>
+    <label for="u">Username</label>
+    <input type="text" id="u" autocomplete="username" autocapitalize="none" required>
+    <label for="p">Password</label>
+    <input type="password" id="p" autocomplete="current-password" required>
+    <button class="btn primary" type="submit">Sign in</button>
+    <div class="err" id="loginErr"></div>
+  </form>
+</div>
+
+<div id="app" class="hidden">
+  <header class="top">
+    <div class="top-row">
+      <a class="brand" href="/"><picture><source srcset="/logo-dark.png" media="(prefers-color-scheme: dark)"><img class="logo" src="/logo.png" alt="Mother Puppers" width="640" height="334"></picture><small>Work schedule</small></a>
+      <span class="me" id="meName"></span>
+      <button class="btn" id="logout">Sign out</button>
+    </div>
+    <nav class="tabs" id="tabs">
+      <a href="#week" data-view="week">Schedule</a>
+      <a href="#mine" data-view="mine">My shifts</a>
+      <a href="#template" data-view="template">Permanent schedule</a>
+      <a href="#activity" data-view="activity">Changes</a>
+      <a href="#people" data-view="people" class="admin-only">People</a>
+    </nav>
+  </header>
+
+  <main>
+    <!-- Week + permanent template share the grid -->
+    <section id="view-grid" class="view hidden">
+      <div class="toolbar" id="weekBar">
+        <button class="btn" id="prevWeek" aria-label="Previous week">&larr;</button>
+        <div class="week-title" id="weekTitle"></div>
+        <button class="btn" id="nextWeek" aria-label="Next week">&rarr;</button>
+        <button class="btn" id="thisWeek">This week</button>
+        <input type="date" id="jumpDate" aria-label="Go to week">
+        <span class="spacer"></span>
+        <label class="chk" id="onlyMeWrap"><input type="checkbox" id="onlyMe"> Only me</label>
+        <button class="btn admin-only" id="fillBtn">Fill from permanent…</button>
+        <button class="btn admin-only" id="copyBtn">Copy last week…</button>
+        <button class="btn" id="printBtn">Print</button>
+      </div>
+      <div class="toolbar hidden" id="templateBar">
+        <div class="seg" id="tmplSeg">
+          <button class="btn" data-week="A">Week A</button>
+          <button class="btn" data-week="B">Week B</button>
+        </div>
+        <span class="muted" id="tmplHint"></span>
+        <span class="spacer"></span>
+        <button class="btn" id="printBtn2">Print</button>
+      </div>
+
+      <div class="palette admin-only" id="palette"></div>
+      <div id="banner" class="banner hidden"></div>
+
+      <div class="grid-wrap"><table class="grid" id="grid"></table></div>
+      <div class="totals" id="totals"></div>
+    </section>
+
+    <section id="view-mine" class="view hidden">
+      <div class="toolbar">
+        <select id="minePerson" class="admin-only"></select>
+        <span class="muted">Next three weeks</span>
+      </div>
+      <div id="mineList"></div>
+    </section>
+
+    <section id="view-activity" class="view hidden">
+      <div id="activityList" class="card list"></div>
+    </section>
+
+    <section id="view-people" class="view hidden">
+      <div class="card">
+        <h2>People on the schedule</h2>
+        <p class="muted">Linking someone to their cleaning-list login uses that login's color and lets them see "My shifts". Logins themselves are managed on cleaning.motherpuppers.net/admin.</p>
+        <table class="people" id="peopleTable"></table>
+        <form id="addPerson" class="add-person">
+          <input type="text" id="newName" placeholder="Name" required>
+          <input type="color" id="newColor" value="#7357a4" aria-label="Color">
+          <select id="newLogin"><option value="">No login</option></select>
+          <button class="btn primary" type="submit">Add person</button>
+        </form>
+      </div>
+      <div class="card">
+        <h2>Permanent schedule weeks</h2>
+        <p class="muted">The permanent schedule alternates Week A and Week B. Pick any Monday that is a Week A:</p>
+        <input type="date" id="anchor"> <button class="btn" id="saveAnchor">Save</button> <span id="anchorMsg" class="muted"></span>
+      </div>
+    </section>
+  </main>
+</div>
+
+<dialog id="fillDlg">
+  <form method="dialog" class="dlg">
+    <h3>Fill this week from the permanent schedule</h3>
+    <label>Permanent week</label>
+    <div class="seg"><label><input type="radio" name="fw" value="A"> Week A</label><label><input type="radio" name="fw" value="B"> Week B</label></div>
+    <label>How</label>
+    <div class="seg col"><label><input type="radio" name="fm" value="fill" checked> Only fill empty slots</label><label><input type="radio" name="fm" value="replace"> Replace the whole week</label></div>
+    <div class="dlg-btns"><button class="btn" value="cancel">Cancel</button><button class="btn primary" value="ok">Fill week</button></div>
+  </form>
+</dialog>
+
+<dialog id="copyDlg">
+  <form method="dialog" class="dlg">
+    <h3>Copy last week into this week</h3>
+    <p class="muted" id="copyText"></p>
+    <div class="seg col"><label><input type="radio" name="cm" value="fill" checked> Only fill empty slots</label><label><input type="radio" name="cm" value="replace"> Replace the whole week</label></div>
+    <div class="dlg-btns"><button class="btn" value="cancel">Cancel</button><button class="btn primary" value="ok">Copy</button></div>
+  </form>
+</dialog>
+
+<script src="/app.js"></script>
+</body>
+</html>
