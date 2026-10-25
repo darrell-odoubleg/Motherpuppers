@@ -3,7 +3,7 @@ const path = require('path');
 const crypto = require('crypto');
 const express = require('express');
 const session = require('express-session');
-const { db, users, getSettings, FIRST_SLOT_MIN, SLOT_COUNT } = require('./db');
+const { db, users, getSettings, FIRST_SLOT_MIN, SLOT_COUNT, LANES } = require('./db');
 
 const PORT = process.env.PORT || 4300;
 const app = express();
@@ -170,10 +170,16 @@ const peopleById = () => new Map(listPeople({ includeInactive: true }).map(p => 
 
 function weekData(monday) {
   const days = Array.from({ length: 7 }, (_, i) => ({ date: addDays(monday, i), name: DAY_NAMES[i] }));
-  const rows = db.prepare('SELECT date, slot, person_id, note FROM cells WHERE date BETWEEN ? AND ?').all(days[0].date, days[6].date);
+  const rows = db.prepare('SELECT date, slot, lane, person_id, note FROM cells WHERE date BETWEEN ? AND ?').all(days[0].date, days[6].date);
   const cells = {};
-  for (const r of rows) (cells[r.date] = cells[r.date] || {})[r.slot] = { p: r.person_id, n: r.note };
+  for (const r of rows) putCell(cells, r.date, r);
   return { start: monday, days, cells, totals: totals(rows), templateWeek: templateWeekFor(monday) };
+}
+
+// cells[key][slot][lane] = { p, n }
+function putCell(cells, key, r) {
+  const day = cells[key] = cells[key] || {};
+  (day[r.slot] = day[r.slot] || {})[r.lane] = { p: r.person_id, n: r.note };
 }
 
 function totals(rows) {
@@ -188,20 +194,21 @@ function totals(rows) {
 
 app.get('/api/week', requireUser, (req, res) => {
   const start = mondayOf(isDate(req.query.start) ? req.query.start : today());
-  res.json({ ...weekData(start), today: today(), slots: SLOT_COUNT, firstSlotMin: FIRST_SLOT_MIN });
+  res.json({ ...weekData(start), today: today(), slots: SLOT_COUNT, lanes: LANES, firstSlotMin: FIRST_SLOT_MIN });
 });
 
 app.get('/api/template', requireUser, (req, res) => {
   const week = req.query.week === 'B' ? 'B' : 'A';
-  const rows = db.prepare('SELECT dow, slot, person_id, note FROM template_cells WHERE week = ?').all(week);
+  const rows = db.prepare('SELECT dow, slot, lane, person_id, note FROM template_cells WHERE week = ?').all(week);
   const cells = {};
-  for (const r of rows) (cells[`${week}:${r.dow}`] = cells[`${week}:${r.dow}`] || {})[r.slot] = { p: r.person_id, n: r.note };
+  for (const r of rows) putCell(cells, `${week}:${r.dow}`, r);
   const days = DAY_NAMES.map((name, dow) => ({ date: `${week}:${dow}`, name }));
-  res.json({ week, days, cells, totals: totals(rows), slots: SLOT_COUNT, firstSlotMin: FIRST_SLOT_MIN });
+  res.json({ week, days, cells, totals: totals(rows), slots: SLOT_COUNT, lanes: LANES, firstSlotMin: FIRST_SLOT_MIN });
 });
 
 // Sets person and/or note on a batch of cells (one paint stroke). `key` is a
-// date for the real schedule, or "A:0".."B:6" for the permanent template.
+// date for the real schedule, or "A:0".."B:6" for the permanent template;
+// `lane` (0–2) is which of the day's three columns.
 // Returns the previous values so the page can undo the stroke.
 app.post('/api/cells', requireAdmin, (req, res) => {
   const items = Array.isArray(req.body && req.body.items) ? req.body.items : [];
@@ -209,32 +216,41 @@ app.post('/api/cells', requireAdmin, (req, res) => {
   const people = peopleById();
   const now = new Date().toISOString();
   const previous = [];
-  const getCell = db.prepare('SELECT person_id, note FROM cells WHERE date = ? AND slot = ?');
-  const getT = db.prepare('SELECT person_id, note FROM template_cells WHERE week = ? AND dow = ? AND slot = ?');
-  const upCell = db.prepare(`INSERT INTO cells (date, slot, person_id, note, updated_by, updated_at) VALUES (?, ?, ?, ?, ?, ?)
-    ON CONFLICT(date, slot) DO UPDATE SET person_id = excluded.person_id, note = excluded.note, updated_by = excluded.updated_by, updated_at = excluded.updated_at`);
-  const delCell = db.prepare('DELETE FROM cells WHERE date = ? AND slot = ?');
-  const upT = db.prepare(`INSERT INTO template_cells (week, dow, slot, person_id, note) VALUES (?, ?, ?, ?, ?)
-    ON CONFLICT(week, dow, slot) DO UPDATE SET person_id = excluded.person_id, note = excluded.note`);
-  const delT = db.prepare('DELETE FROM template_cells WHERE week = ? AND dow = ? AND slot = ?');
+  const getCell = db.prepare('SELECT person_id, note FROM cells WHERE date = ? AND slot = ? AND lane = ?');
+  const getT = db.prepare('SELECT person_id, note FROM template_cells WHERE week = ? AND dow = ? AND slot = ? AND lane = ?');
+  const upCell = db.prepare(`INSERT INTO cells (date, slot, lane, person_id, note, updated_by, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)
+    ON CONFLICT(date, slot, lane) DO UPDATE SET person_id = excluded.person_id, note = excluded.note, updated_by = excluded.updated_by, updated_at = excluded.updated_at`);
+  const delCell = db.prepare('DELETE FROM cells WHERE date = ? AND slot = ? AND lane = ?');
+  const upT = db.prepare(`INSERT INTO template_cells (week, dow, slot, lane, person_id, note) VALUES (?, ?, ?, ?, ?, ?)
+    ON CONFLICT(week, dow, slot, lane) DO UPDATE SET person_id = excluded.person_id, note = excluded.note`);
+  const delT = db.prepare('DELETE FROM template_cells WHERE week = ? AND dow = ? AND slot = ? AND lane = ?');
+  // Someone can't be in two lanes at the same half hour ("Open shift" can).
+  const dupCell = db.prepare('SELECT 1 FROM cells WHERE date = ? AND slot = ? AND lane != ? AND person_id = ?');
+  const dupT = db.prepare('SELECT 1 FROM template_cells WHERE week = ? AND dow = ? AND slot = ? AND lane != ? AND person_id = ?');
 
   try {
     db.transaction(() => {
       for (const it of items) {
         const slot = Number(it.slot);
+        const lane = Number(it.lane || 0);
         if (!Number.isInteger(slot) || slot < 0 || slot >= SLOT_COUNT) throw new Error('Bad time slot');
+        if (!Number.isInteger(lane) || lane < 0 || lane >= LANES) throw new Error('Bad column');
         if (it.person_id != null && !people.has(Number(it.person_id))) throw new Error('Unknown person');
         const tm = /^([AB]):([0-6])$/.exec(String(it.key));
         if (!tm && !isDate(it.key)) throw new Error('Bad day');
-        const old = (tm ? getT.get(tm[1], Number(tm[2]), slot) : getCell.get(it.key, slot)) || { person_id: null, note: '' };
-        previous.push({ key: it.key, slot, person_id: old.person_id, note: old.note });
+        const old = (tm ? getT.get(tm[1], Number(tm[2]), slot, lane) : getCell.get(it.key, slot, lane)) || { person_id: null, note: '' };
+        previous.push({ key: it.key, slot, lane, person_id: old.person_id, note: old.note });
         const person = it.person_id !== undefined ? (it.person_id == null ? null : Number(it.person_id)) : old.person_id;
         const note = it.note !== undefined ? String(it.note || '').trim().slice(0, 60) : old.note;
+        if (person != null && person !== old.person_id && !people.get(person).is_open &&
+            (tm ? dupT.get(tm[1], Number(tm[2]), slot, lane, person) : dupCell.get(it.key, slot, lane, person))) {
+          throw new Error(`${people.get(person).name} is already on at ${slotLabel(slot)}`);
+        }
         if (tm) {
-          if (person == null && !note) delT.run(tm[1], Number(tm[2]), slot);
-          else upT.run(tm[1], Number(tm[2]), slot, person, note);
-        } else if (person == null && !note) delCell.run(it.key, slot);
-        else upCell.run(it.key, slot, person, note, req.user.name, now);
+          if (person == null && !note) delT.run(tm[1], Number(tm[2]), slot, lane);
+          else upT.run(tm[1], Number(tm[2]), slot, lane, person, note);
+        } else if (person == null && !note) delCell.run(it.key, slot, lane);
+        else upCell.run(it.key, slot, lane, person, note, req.user.name, now);
       }
     })();
   } catch (err) {
@@ -253,7 +269,7 @@ function describeStroke(items, people) {
   }
   const parts = [];
   for (const [key, list] of byKey) {
-    const slots = list.map(i => Number(i.slot)).sort((a, b) => a - b);
+    const slots = [...new Set(list.map(i => Number(i.slot)))].sort((a, b) => a - b);
     const ranges = [];
     for (const s of slots) {
       const last = ranges[ranges.length - 1];
@@ -271,19 +287,30 @@ function describeStroke(items, people) {
   return parts.join('; ');
 }
 
+// Puts a copied cell into an empty slot+lane, skipping anyone who is already
+// on at that half hour in another lane (fill-empty mode can collide).
+function fillCell(userName, now) {
+  const ins = db.prepare(`INSERT INTO cells (date, slot, lane, person_id, note, updated_by, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)
+    ON CONFLICT(date, slot, lane) DO NOTHING`);
+  const dup = db.prepare('SELECT 1 FROM cells c JOIN people p ON p.id = c.person_id WHERE c.date = ? AND c.slot = ? AND c.person_id = ? AND p.is_open = 0');
+  return (date, r) => {
+    if (r.person_id && dup.get(date, r.slot, r.person_id)) return;
+    ins.run(date, r.slot, r.lane, r.person_id, r.note, userName, now);
+  };
+}
+
 // Fill a week from the permanent schedule. mode "replace" overwrites the
 // whole week; "fill" only fills empty slots.
 app.post('/api/week/apply-template', requireAdmin, (req, res) => {
   const { start, week, mode } = req.body || {};
   if (!isDate(start) || !['A', 'B'].includes(week)) return res.status(400).json({ error: 'Pick a week and A or B' });
   const monday = mondayOf(start);
-  const rows = db.prepare('SELECT dow, slot, person_id, note FROM template_cells WHERE week = ?').all(week);
+  const rows = db.prepare('SELECT dow, slot, lane, person_id, note FROM template_cells WHERE week = ?').all(week);
   const now = new Date().toISOString();
   db.transaction(() => {
     if (mode === 'replace') db.prepare('DELETE FROM cells WHERE date BETWEEN ? AND ?').run(monday, addDays(monday, 6));
-    const ins = db.prepare(`INSERT INTO cells (date, slot, person_id, note, updated_by, updated_at) VALUES (?, ?, ?, ?, ?, ?)
-      ON CONFLICT(date, slot) DO NOTHING`);
-    for (const r of rows) ins.run(addDays(monday, r.dow), r.slot, r.person_id, r.note, req.user.name, now);
+    const fill = fillCell(req.user.name, now);
+    for (const r of rows) fill(addDays(monday, r.dow), r);
   })();
   logChange(req.user, `${mode === 'replace' ? 'Replaced' : 'Filled empty slots in'} the week of ${monday} from permanent week ${week}`);
   res.json(weekData(monday));
@@ -294,14 +321,13 @@ app.post('/api/week/copy', requireAdmin, (req, res) => {
   if (!isDate(from) || !isDate(to)) return res.status(400).json({ error: 'Pick both weeks' });
   const src = mondayOf(from), dst = mondayOf(to);
   if (src === dst) return res.status(400).json({ error: 'That is the same week' });
-  const rows = db.prepare('SELECT date, slot, person_id, note FROM cells WHERE date BETWEEN ? AND ?').all(src, addDays(src, 6));
+  const rows = db.prepare('SELECT date, slot, lane, person_id, note FROM cells WHERE date BETWEEN ? AND ?').all(src, addDays(src, 6));
   const now = new Date().toISOString();
   db.transaction(() => {
     if (mode === 'replace') db.prepare('DELETE FROM cells WHERE date BETWEEN ? AND ?').run(dst, addDays(dst, 6));
-    const ins = db.prepare(`INSERT INTO cells (date, slot, person_id, note, updated_by, updated_at) VALUES (?, ?, ?, ?, ?, ?)
-      ON CONFLICT(date, slot) DO NOTHING`);
+    const fill = fillCell(req.user.name, now);
     const offset = Math.round((toUTC(dst) - toUTC(src)) / 86400000);
-    for (const r of rows) ins.run(addDays(r.date, offset), r.slot, r.person_id, r.note, req.user.name, now);
+    for (const r of rows) fill(addDays(r.date, offset), r);
   })();
   logChange(req.user, `Copied the week of ${src} to the week of ${dst}${mode === 'replace' ? ' (replaced)' : ' (empty slots only)'}`);
   res.json(weekData(dst));
@@ -313,7 +339,8 @@ app.get('/api/shifts', requireUser, (req, res) => {
   if (!personId) return res.json({ shifts: [], note: 'Your login is not linked to anyone on the schedule yet.' });
   const from = isDate(req.query.from) ? req.query.from : today();
   const to = isDate(req.query.to) ? req.query.to : addDays(from, 20);
-  const rows = db.prepare('SELECT date, slot, note FROM cells WHERE person_id = ? AND date BETWEEN ? AND ? ORDER BY date, slot').all(personId, from, to);
+  const rows = db.prepare(`SELECT date, slot, GROUP_CONCAT(NULLIF(note, ''), ', ') note FROM cells
+    WHERE person_id = ? AND date BETWEEN ? AND ? GROUP BY date, slot ORDER BY date, slot`).all(personId, from, to);
   const shifts = [];
   for (const r of rows) {
     const last = shifts[shifts.length - 1];

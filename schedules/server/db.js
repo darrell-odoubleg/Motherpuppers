@@ -15,6 +15,8 @@ const users = new Database(process.env.CLEANING_DB || path.join(__dirname, '..',
 // the "MP SCHEDULE Layout" workbook. Slot 0 = 6:00–6:30, slot 31 = 9:30–10:00pm.
 const FIRST_SLOT_MIN = 6 * 60;
 const SLOT_COUNT = 32;
+// Up to three people can be on at once: each day has lanes 0–2 side by side.
+const LANES = 3;
 
 db.exec(`
   -- Anyone who can be scheduled. user_id links to a cleaning login (and takes
@@ -29,24 +31,26 @@ db.exec(`
     active INTEGER NOT NULL DEFAULT 1,
     sort INTEGER NOT NULL DEFAULT 0
   );
-  -- One person per half-hour slot per day, as in the workbook.
+  -- One person per lane per half-hour slot per day (the workbook had one lane).
   CREATE TABLE IF NOT EXISTS cells (
     date TEXT NOT NULL,
     slot INTEGER NOT NULL,
+    lane INTEGER NOT NULL DEFAULT 0,
     person_id INTEGER REFERENCES people(id),
     note TEXT NOT NULL DEFAULT '',
     updated_by TEXT,
     updated_at TEXT,
-    PRIMARY KEY (date, slot)
+    PRIMARY KEY (date, slot, lane)
   );
   -- The two-week "Actual Permanent Schedule": week A/B, dow 0 = Monday.
   CREATE TABLE IF NOT EXISTS template_cells (
     week TEXT NOT NULL,
     dow INTEGER NOT NULL,
     slot INTEGER NOT NULL,
+    lane INTEGER NOT NULL DEFAULT 0,
     person_id INTEGER REFERENCES people(id),
     note TEXT NOT NULL DEFAULT '',
-    PRIMARY KEY (week, dow, slot)
+    PRIMARY KEY (week, dow, slot, lane)
   );
   CREATE TABLE IF NOT EXISTS changes (
     id INTEGER PRIMARY KEY,
@@ -57,6 +61,24 @@ db.exec(`
   CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT NOT NULL);
   CREATE TABLE IF NOT EXISTS sessions (sid TEXT PRIMARY KEY, data TEXT NOT NULL, expires INTEGER NOT NULL);
 `);
+
+// Databases made before lanes existed: rebuild both grids with a lane column
+// (the primary key changes, so ALTER TABLE isn't enough). Old cells go in lane 0.
+function addLanes(table, keyCols) {
+  if (db.prepare(`PRAGMA table_info(${table})`).all().some(c => c.name === 'lane')) return;
+  const cols = db.prepare(`PRAGMA table_info(${table})`).all().map(c => c.name).join(', ');
+  db.transaction(() => {
+    db.exec(`ALTER TABLE ${table} RENAME TO ${table}_old`);
+    const ddl = db.prepare("SELECT sql FROM sqlite_master WHERE name = ?").get(`${table}_old`).sql
+      .replace(`${table}_old`, table)
+      .replace('slot INTEGER NOT NULL,', 'slot INTEGER NOT NULL,\n    lane INTEGER NOT NULL DEFAULT 0,')
+      .replace(`PRIMARY KEY (${keyCols})`, `PRIMARY KEY (${keyCols}, lane)`);
+    db.exec(ddl);
+    db.exec(`INSERT INTO ${table} (${cols}) SELECT ${cols} FROM ${table}_old; DROP TABLE ${table}_old;`);
+  })();
+}
+addLanes('cells', 'date, slot');
+addLanes('template_cells', 'week, dow, slot');
 
 const DEFAULT_SETTINGS = {
   timezone: 'America/Denver',
@@ -106,4 +128,4 @@ function seed() {
 }
 seed();
 
-module.exports = { db, users, getSettings, FIRST_SLOT_MIN, SLOT_COUNT };
+module.exports = { db, users, getSettings, FIRST_SLOT_MIN, SLOT_COUNT, LANES };

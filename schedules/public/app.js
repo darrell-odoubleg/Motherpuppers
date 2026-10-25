@@ -9,7 +9,7 @@
   let view = 'week';
   let weekStart = null;   // Monday YYYY-MM-DD
   let tmplWeek = 'A';
-  let data = null;        // current grid: { days, cells, totals, ... }
+  let data = null;        // current grid: { days, cells, totals, ... }; cells[key][slot][lane] = { p, n }
   let tool = null;        // { type: 'person', id } | { type: 'erase' } | { type: 'note' }
   const undoStack = [];
 
@@ -108,17 +108,17 @@
 
   // ---------- grid ----------
   function render() {
-    const { days, cells, slots, firstSlotMin } = data;
+    const { days, slots, lanes, firstSlotMin } = data;
     const todayKey = data.today;
     const head = `<thead><tr><th class="time"></th>${days.map(d => {
       const isToday = d.date === todayKey;
       const sub = /^\d{4}-/.test(d.date) ? md(d.date) : '';
-      return `<th class="${isToday ? 'today' : ''}">${esc(d.name.slice(0, 3))}<span class="d">${sub}</span></th>`;
+      return `<th colspan="${lanes}" class="${isToday ? 'today' : ''}">${esc(d.name.slice(0, 3))}<span class="d">${sub}</span></th>`;
     }).join('')}</tr></thead>`;
     let body = '<tbody>';
     for (let s = 0; s < slots; s++) {
       body += `<tr class="${s % 2 === 0 ? 'hour' : ''}"><td class="time">${slotLabel(s, firstSlotMin)}</td>`;
-      for (const d of days) body += cellHtml(d.date, s, (cells[d.date] || {})[s], d.date === todayKey);
+      for (const d of days) for (let l = 0; l < lanes; l++) body += cellHtml(d.date, s, l, getCell(d.date, s, l), d.date === todayKey);
       body += '</tr>';
     }
     body += '</tbody>';
@@ -126,25 +126,27 @@
     renderTotals();
   }
 
-  function cellHtml(key, slot, c, isToday) {
+  const getCell = (key, slot, lane) => ((data.cells[key] || {})[slot] || {})[lane];
+
+  function cellHtml(key, slot, lane, c, isToday) {
     const p = c && c.p ? byId.get(c.p) : null;
     const style = p ? `background:${p.color};color:${textColor(p.color)}` : '';
     const dim = $('#onlyMe').checked && view === 'week' && me.person_id && (!p || p.id !== me.person_id);
-    const cls = ['c', isToday ? 'today' : '', p && p.is_open ? 'open' : '', dim ? 'dim' : ''].join(' ');
+    const cls = ['c', `l${lane}`, lane === data.lanes - 1 ? 'last' : '', isToday ? 'today' : '', p && p.is_open ? 'open' : '', dim ? 'dim' : ''].join(' ');
     const label = c && c.n ? c.n : (p && p.is_open ? 'OPEN' : '');
     const title = `${p ? p.name : 'Nobody'} · ${slotLabel(slot, data.firstSlotMin)}–${slotLabel(slot, data.firstSlotMin, true)}${c && c.n ? ` · ${c.n}` : ''}`;
-    return `<td class="${cls}" data-key="${esc(key)}" data-slot="${slot}" style="${style}" title="${esc(title)}">${esc(label)}</td>`;
+    return `<td class="${cls}" data-key="${esc(key)}" data-slot="${slot}" data-lane="${lane}" style="${style}" title="${esc(title)}">${esc(label)}</td>`;
   }
 
-  function redrawCell(key, slot) {
-    const td = $(`#grid td.c[data-key="${CSS.escape(key)}"][data-slot="${slot}"]`);
+  function redrawCell(key, slot, lane) {
+    const td = $(`#grid td.c[data-key="${CSS.escape(key)}"][data-slot="${slot}"][data-lane="${lane}"]`);
     if (!td) return;
-    td.outerHTML = cellHtml(key, slot, (data.cells[key] || {})[slot], key === data.today);
+    td.outerHTML = cellHtml(key, slot, lane, getCell(key, slot, lane), key === data.today);
   }
 
   function computeTotals() {
     const t = {};
-    for (const day of Object.values(data.cells)) for (const c of Object.values(day)) {
+    for (const day of Object.values(data.cells)) for (const slot of Object.values(day)) for (const c of Object.values(slot)) {
       const p = c.p && byId.get(c.p);
       if (p && !p.is_open) t[p.id] = (t[p.id] || 0) + 0.5;
     }
@@ -158,12 +160,20 @@
       `<span class="total"><span class="sw" style="background:${esc(p.color)}"></span>${esc(p.name)} <b>${t[p.id] || 0}</b></span>`).join('');
   }
 
-  function setLocal(key, slot, person, note) {
+  function setLocal(key, slot, lane, person, note) {
     const day = data.cells[key] = data.cells[key] || {};
-    const cur = day[slot] || { p: null, n: '' };
+    const lanes = day[slot] = day[slot] || {};
+    const cur = lanes[lane] || { p: null, n: '' };
     const next = { p: person !== undefined ? person : cur.p, n: note !== undefined ? note : cur.n };
-    if (!next.p && !next.n) delete day[slot]; else day[slot] = next;
-    redrawCell(key, slot);
+    if (!next.p && !next.n) delete lanes[lane]; else lanes[lane] = next;
+    redrawCell(key, slot, lane);
+  }
+
+  // True if this person is already in another lane at that half hour.
+  function onElsewhere(key, slot, lane, personId) {
+    const p = byId.get(personId);
+    if (!p || p.is_open) return false;
+    return Object.entries((data.cells[key] || {})[slot] || {}).some(([l, c]) => Number(l) !== lane && c.p === personId);
   }
 
   // Paint strokes: press on a cell, drag across others, release to save.
@@ -177,12 +187,15 @@
 
   function addToStroke(td) {
     if (!td || !stroke) return;
-    const id = td.dataset.key + '|' + td.dataset.slot;
+    const id = td.dataset.key + '|' + td.dataset.slot + '|' + td.dataset.lane;
     if (stroke.seen.has(id)) return;
     stroke.seen.add(id);
-    const item = { key: td.dataset.key, slot: Number(td.dataset.slot) };
-    if (tool.type === 'person') { item.person_id = tool.id; setLocal(item.key, item.slot, tool.id); }
-    else { item.person_id = null; item.note = ''; setLocal(item.key, item.slot, null, ''); }
+    const item = { key: td.dataset.key, slot: Number(td.dataset.slot), lane: Number(td.dataset.lane) };
+    if (tool.type === 'person') {
+      // Dragging past a half hour they already work in another column just skips it.
+      if (onElsewhere(item.key, item.slot, item.lane, tool.id)) return;
+      item.person_id = tool.id; setLocal(item.key, item.slot, item.lane, tool.id);
+    } else { item.person_id = null; item.note = ''; setLocal(item.key, item.slot, item.lane, null, ''); }
     stroke.items.push(item);
   }
 
@@ -216,14 +229,14 @@
   }
 
   async function editNote(td) {
-    const key = td.dataset.key, slot = Number(td.dataset.slot);
-    const cur = ((data.cells[key] || {})[slot] || {}).n || '';
+    const key = td.dataset.key, slot = Number(td.dataset.slot), lane = Number(td.dataset.lane);
+    const cur = (getCell(key, slot, lane) || {}).n || '';
     const note = prompt('Note for this half hour (blank to remove):', cur);
     if (note === null) return;
     try {
-      const r = await api('/api/cells', { method: 'POST', body: { items: [{ key, slot, note }] } });
+      const r = await api('/api/cells', { method: 'POST', body: { items: [{ key, slot, lane, note }] } });
       undoStack.push(r.previous);
-      setLocal(key, slot, undefined, note.trim().slice(0, 60));
+      setLocal(key, slot, lane, undefined, note.trim().slice(0, 60));
       renderPalette();
     } catch (err) { banner(err.message, true); }
   }
@@ -232,8 +245,10 @@
     const prev = undoStack.pop();
     if (!prev) return;
     try {
-      await api('/api/cells', { method: 'POST', body: { items: prev.map(p => ({ key: p.key, slot: p.slot, person_id: p.person_id, note: p.note })), log: false } });
-      for (const p of prev) setLocal(p.key, p.slot, p.person_id, p.note);
+      // Clear first, then restore, so swapping people between lanes can't trip the double-booking check.
+      await api('/api/cells', { method: 'POST', body: { items: prev.map(p => ({ key: p.key, slot: p.slot, lane: p.lane, person_id: null })), log: false } });
+      await api('/api/cells', { method: 'POST', body: { items: prev.map(p => ({ key: p.key, slot: p.slot, lane: p.lane, person_id: p.person_id, note: p.note })), log: false } });
+      for (const p of prev) setLocal(p.key, p.slot, p.lane, p.person_id, p.note);
       renderTotals();
       renderPalette();
     } catch (err) { banner(err.message, true); }

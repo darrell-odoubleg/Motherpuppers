@@ -102,20 +102,27 @@ main { max-width: 1400px; margin: 0 auto; padding: 14px 16px 40px; }
 
 /* grid */
 .grid-wrap { overflow-x: auto; background: var(--card); border: 1px solid var(--line); border-radius: 12px; }
-.grid { border-collapse: collapse; width: 100%; min-width: 620px; table-layout: fixed; user-select: none; -webkit-user-select: none; }
+.grid { border-collapse: collapse; width: 100%; min-width: 900px; table-layout: fixed; user-select: none; -webkit-user-select: none; }
 .grid th, .grid td { border: 1px solid var(--grid-line); }
 .grid thead th { position: sticky; top: 0; background: var(--card); z-index: 2; padding: 6px 2px; font-size: 12px; font-weight: 700; }
 .grid thead th .d { display: block; font-weight: 500; color: var(--muted); }
 .grid thead th.today { background: var(--today); color: var(--accent); }
 .grid th.time, .grid td.time { width: 64px; font-size: 11px; color: var(--muted); text-align: right; padding: 0 6px; white-space: nowrap; font-weight: 500; background: var(--card); }
 .grid td.c { height: 22px; padding: 0 3px; font-size: 10.5px; font-weight: 700; text-align: center; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; letter-spacing: .2px; }
-.grid td.c.today { box-shadow: inset 2px 0 0 var(--accent), inset -2px 0 0 var(--accent); }
+/* three lanes per day: faint lines between lanes, a strong line between days */
+.grid td.c { border-left-color: transparent; }
+.grid td.c.l1, .grid td.c.l2 { border-left: 1px dashed var(--grid-line); }
+.grid td.c.l0 { border-left: 2px solid var(--muted); }
+.grid thead th:not(.time) { border-left: 2px solid var(--muted); }
+.grid td.c.today.l0 { box-shadow: inset 2px 0 0 var(--accent); }
+.grid td.c.today.last { box-shadow: inset -2px 0 0 var(--accent); }
+.grid td.time { position: sticky; left: 0; z-index: 1; }
 .grid td.c.dim { opacity: .18; }
 .grid tr.hour td { border-top-color: var(--muted); }
 .grid.paint td.c { cursor: crosshair; }
 .grid td.c.open { background-image: repeating-linear-gradient(45deg, transparent 0 5px, rgba(0,0,0,.08) 5px 10px); }
 @media (max-width: 640px) {
-  .grid { min-width: 0; }
+  .grid { min-width: 700px; }
   .grid th.time, .grid td.time { width: 40px; font-size: 9.5px; padding: 0 3px; }
   .grid thead th { font-size: 11px; }
   .grid td.c { font-size: 9px; height: 24px; }
@@ -165,7 +172,8 @@ dialog::backdrop { background: rgba(0,0,0,.35); }
   .top, .toolbar, .palette, .banner, .admin-only { display: none !important; }
   body { background: #fff; }
   .grid-wrap { border: 0; overflow: visible; }
-  .grid td.c { -webkit-print-color-adjust: exact; print-color-adjust: exact; height: 15px; font-size: 8px; }
+  .grid { min-width: 0; }
+  .grid td.c { -webkit-print-color-adjust: exact; print-color-adjust: exact; height: 15px; font-size: 7px; padding: 0 1px; }
   .grid td.c.dim { opacity: 1; }
   .print-title { display: block !important; font-weight: 700; font-size: 16px; margin-bottom: 6px; }
 }
