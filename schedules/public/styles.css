@@ -107,7 +107,7 @@ main { max-width: 1400px; margin: 0 auto; padding: 14px 16px 40px; }
 .grid thead th { position: sticky; top: 0; background: var(--card); z-index: 2; padding: 6px 2px; font-size: 12px; font-weight: 700; }
 .grid thead th .d { display: block; font-weight: 500; color: var(--muted); }
 .grid thead th.today { background: var(--today); color: var(--accent); }
-.grid th.time, .grid td.time { width: 64px; font-size: 11px; color: var(--muted); text-align: right; padding: 0 6px; white-space: nowrap; font-weight: 500; background: var(--card); }
+.grid th.time, .grid td.time { width: 84px; font-size: 11px; color: var(--muted); text-align: right; padding: 0 6px; white-space: nowrap; font-weight: 500; background: var(--card); }
 .grid td.c { height: 22px; padding: 0 3px; font-size: 10.5px; font-weight: 700; text-align: center; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; letter-spacing: .2px; }
 /* three lanes per day: faint lines between lanes, a strong line between days */
 .grid td.c { border-left-color: transparent; }
@@ -123,7 +123,7 @@ main { max-width: 1400px; margin: 0 auto; padding: 14px 16px 40px; }
 .grid td.c.open { background-image: repeating-linear-gradient(45deg, transparent 0 5px, rgba(0,0,0,.08) 5px 10px); }
 @media (max-width: 640px) {
   .grid { min-width: 700px; }
-  .grid th.time, .grid td.time { width: 40px; font-size: 9.5px; padding: 0 3px; }
+  .grid th.time, .grid td.time { width: 62px; font-size: 9.5px; padding: 0 3px; }
   .grid thead th { font-size: 11px; }
   .grid td.c { font-size: 9px; height: 24px; }
   .palette { top: 0; position: static; }

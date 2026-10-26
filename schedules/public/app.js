@@ -117,7 +117,7 @@
     }).join('')}</tr></thead>`;
     let body = '<tbody>';
     for (let s = 0; s < slots; s++) {
-      body += `<tr class="${s % 2 === 0 ? 'hour' : ''}"><td class="time">${slotLabel(s, firstSlotMin)}</td>`;
+      body += `<tr class="${s % 2 === 0 ? 'hour' : ''}"><td class="time">${slotLabel(s, firstSlotMin)}–${slotLabel(s + 1, firstSlotMin)}</td>`;
       for (const d of days) for (let l = 0; l < lanes; l++) body += cellHtml(d.date, s, l, getCell(d.date, s, l), d.date === todayKey);
       body += '</tr>';
     }
