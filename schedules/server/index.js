@@ -133,7 +133,10 @@ function listPeople({ includeInactive = false } = {}) {
   });
 }
 
-app.get('/api/people', requireUser, (req, res) => res.json(listPeople({ includeInactive: req.query.all === '1' })));
+app.get('/api/people', requireUser, (req, res) => {
+  const list = listPeople({ includeInactive: req.query.all === '1' });
+  res.json(list.map(p => (req.user.is_admin || p.id === req.user.person_id ? p : { ...p, notes: undefined })));
+});
 
 app.get('/api/logins', requireAdmin, (req, res) => {
   res.json(users.prepare('SELECT id, name, username, color FROM users WHERE active = 1 ORDER BY name').all());
@@ -159,9 +162,11 @@ app.put('/api/people/:id', requireAdmin, (req, res) => {
     user_id: b.user_id !== undefined ? (b.user_id || null) : p.user_id,
     active: b.active !== undefined ? (b.active ? 1 : 0) : p.active,
     sort: Number.isInteger(b.sort) ? b.sort : p.sort,
+    notes: b.notes !== undefined ? String(b.notes || '').trim().slice(0, 4000) : p.notes,
   };
-  db.prepare('UPDATE people SET name = @name, color = @color, user_id = @user_id, active = @active, sort = @sort WHERE id = @id')
+  db.prepare('UPDATE people SET name = @name, color = @color, user_id = @user_id, active = @active, sort = @sort, notes = @notes WHERE id = @id')
     .run({ ...next, id: p.id });
+  if (b.notes !== undefined && next.notes !== p.notes) logChange(req.user, `Updated notes for ${next.name}`);
   res.json({ ok: true });
 });
 
@@ -377,6 +382,8 @@ app.put('/api/settings', requireAdmin, (req, res) => {
   }
   res.json(getSettings());
 });
+
+require('./chat')(app, { requireUser, listPeople, today, addDays, mondayOf, templateWeekFor, slotLabel, DAY_NAMES, isDate, toUTC });
 
 app.use(express.static(path.join(__dirname, '..', 'public')));
 app.get('*', (req, res) => res.sendFile(path.join(__dirname, '..', 'public', 'index.html')));

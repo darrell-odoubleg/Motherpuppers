@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Mother Puppers Schedule</title>
-<link rel="stylesheet" href="/styles.css?v=2">
+<link rel="stylesheet" href="/styles.css?v=3">
 <link rel="icon" type="image/png" href="/favicon.png">
 <link rel="apple-touch-icon" href="/icon.png">
 <meta name="theme-color" content="#7357a4">
@@ -125,6 +125,16 @@
   </form>
 </dialog>
 
-<script src="/app.js?v=2"></script>
+<button class="chat-fab" id="chatFab" type="button" aria-expanded="false" aria-controls="chatPanel">
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+  <span>Ask</span>
+</button>
+<section class="chat-panel hidden" id="chatPanel" aria-label="Schedule assistant">
+  <header><strong>Schedule assistant</strong><span class="spacer"></span><button class="btn" id="chatClear" type="button">Clear</button><button class="btn" id="chatClose" type="button" aria-label="Close">&times;</button></header>
+  <div class="chat-log" id="chatLog" aria-live="polite"></div>
+  <form id="chatForm"><textarea id="chatInput" rows="2" placeholder="Ask about the schedule…" aria-label="Question"></textarea><button class="btn primary" type="submit">Send</button></form>
+</section>
+
+<script src="/app.js?v=3"></script>
 </body>
 </html>

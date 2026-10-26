@@ -78,6 +78,12 @@ function addLanes(table, keyCols) {
   })();
 }
 addLanes('cells', 'date, slot');
+
+// Per-person notes: time-off requests, kids/childcare constraints. Admins edit;
+// staff see only their own.
+if (!db.prepare('PRAGMA table_info(people)').all().some(c => c.name === 'notes')) {
+  db.exec("ALTER TABLE people ADD COLUMN notes TEXT NOT NULL DEFAULT ''");
+}
 addLanes('template_cells', 'week, dow, slot');
 
 const DEFAULT_SETTINGS = {

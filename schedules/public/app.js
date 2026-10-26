@@ -329,8 +329,9 @@
     const pid = (me.is_admin && sel.value) || me.person_id || '';
     const r = await api('/api/shifts' + (pid ? `?person_id=${pid}` : ''));
     if (r.note) { $('#mineList').innerHTML = `<div class="card muted">${esc(r.note)}</div>`; return; }
-    if (!r.shifts.length) { $('#mineList').innerHTML = '<div class="card muted">No shifts in the next three weeks.</div>'; return; }
     const p = byId.get(r.person_id);
+    const notesCard = p && p.notes ? `<div class="card person-notes"><h2>Notes</h2><div>${esc(p.notes)}</div></div>` : '';
+    if (!r.shifts.length) { $('#mineList').innerHTML = notesCard + '<div class="card muted">No shifts in the next three weeks.</div>'; return; }
     const weeks = new Map();
     for (const s of r.shifts) {
       const k = mondayOf(s.date);
@@ -338,7 +339,7 @@
       weeks.get(k).push(s);
     }
     const today = data && data.today;
-    $('#mineList').innerHTML = [...weeks].map(([monday, list]) => `<div class="week-group">
+    $('#mineList').innerHTML = notesCard + [...weeks].map(([monday, list]) => `<div class="week-group">
         <h3><span>Week of ${longDate(monday)}</span><span class="muted">${list.reduce((t, s) => t + s.hours, 0)} hrs</span></h3>
         ${list.map(s => `<div class="shift${s.date === today ? ' today' : ''}" style="border-left-color:${esc(p ? p.color : '')}">
           <span class="when">${esc(s.day.slice(0, 3))} ${md(s.date)}</span>
@@ -367,7 +368,8 @@
         <td><input type="text" data-f="name" value="${esc(p.name)}"></td>
         <td>${p.user_id ? `<span class="sw" style="display:inline-block;width:22px;height:22px;border-radius:6px;background:${esc(p.color)};vertical-align:middle"></span> <span class="muted">from login</span>` : `<input type="color" data-f="color" value="${esc(p.color)}">`}</td>
         <td>${p.is_open ? '<span class="muted">—</span>' : `<select data-f="user_id">${loginOpts(p.user_id)}</select>`}</td>
-        <td><input type="checkbox" data-f="active"${p.active ? ' checked' : ''}></td></tr>`).join('');
+        <td><input type="checkbox" data-f="active"${p.active ? ' checked' : ''}></td></tr>${p.is_open ? '' : `
+      <tr data-id="${p.id}" class="notes-row"><td colspan="4"><textarea data-f="notes" rows="2" placeholder="Notes for ${esc(p.name)}: time-off requests, kids/childcare…">${esc(p.notes || '')}</textarea></td></tr>`}`).join('');
     $('#anchor').value = settings.week_a_anchor;
   }
 
@@ -442,6 +444,67 @@
     }
     show(location.hash.slice(1) || 'week');
   }
+
+  // ---------- schedule assistant (read-only chat) ----------
+  const chat = { open: false, busy: false, messages: [] };
+  try { chat.messages = JSON.parse(sessionStorage.getItem('mp_chat') || '[]'); } catch (e) {}
+
+  // Just the bits of markdown the assistant uses: **bold** and "- " bullet lines.
+  function formatReply(text) {
+    const html = [];
+    let list = false;
+    for (const line of String(text).split('\n')) {
+      const item = /^\s*[-*•]\s+(.*)$/.exec(line);
+      if (item && !list) { html.push('<ul>'); list = true; }
+      if (!item && list) { html.push('</ul>'); list = false; }
+      const body = esc(item ? item[1] : line).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+      html.push(item ? `<li>${body}</li>` : (body ? `<p>${body}</p>` : ''));
+    }
+    if (list) html.push('</ul>');
+    return html.join('');
+  }
+
+  function renderChat() {
+    const log = $('#chatLog');
+    log.innerHTML = (chat.messages.length ? '' : `<div class="chat-hint">Ask about the schedule, like <em>"Who's working Saturday morning?"</em>, <em>"When am I on next week?"</em> or <em>"Who could cover Raven Tuesday 2–6?"</em> I can only read the schedule; a manager makes any changes.</div>`) +
+      chat.messages.map(m => `<div class="msg ${m.role}">${m.role === 'assistant' ? formatReply(m.content) : esc(m.content).replace(/\n/g, '<br>')}</div>`).join('') +
+      (chat.busy ? '<div class="msg assistant typing">Looking at the schedule…</div>' : '');
+    log.scrollTop = log.scrollHeight;
+    try { sessionStorage.setItem('mp_chat', JSON.stringify(chat.messages.slice(-30))); } catch (e) {}
+  }
+
+  $('#chatFab').addEventListener('click', () => {
+    chat.open = !chat.open;
+    $('#chatPanel').classList.toggle('hidden', !chat.open);
+    $('#chatFab').setAttribute('aria-expanded', chat.open);
+    if (chat.open) { renderChat(); $('#chatInput').focus(); }
+  });
+  $('#chatClose').addEventListener('click', () => $('#chatFab').click());
+  $('#chatClear').addEventListener('click', () => { chat.messages = []; renderChat(); });
+  $('#chatInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); $('#chatForm').requestSubmit(); }
+  });
+  $('#chatForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    const q = $('#chatInput').value.trim();
+    if (!q || chat.busy) return;
+    $('#chatInput').value = '';
+    chat.messages.push({ role: 'user', content: q });
+    chat.busy = true;
+    renderChat();
+    try {
+      const r = await api('/api/chat', { method: 'POST', body: { messages: chat.messages } });
+      chat.messages.push({ role: 'assistant', content: r.reply });
+    } catch (err) {
+      chat.messages.pop();
+      $('#chatInput').value = q;
+      if (err.message !== 'Signed out') chat.messages.push({ role: 'error', content: err.message });
+    }
+    chat.busy = false;
+    renderChat();
+    // Errors are shown once, not sent back as history.
+    chat.messages = chat.messages.filter(m => m.role !== 'error');
+  });
 
   start();
 })();
