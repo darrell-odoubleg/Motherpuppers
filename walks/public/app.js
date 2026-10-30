@@ -26,7 +26,6 @@ function toast(msg) {
 const fmtDate = (iso, o) => new Date(`${iso}T12:00:00`).toLocaleDateString('en-US', o);
 // Clock times in the kennel's time zone, whatever the device is set to.
 const fmtClock = (ms) => new Date(ms).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: (day && day.tz) || undefined });
-const fmtHM = (hm) => { const [h, m] = hm.split(':').map(Number); return `${((h + 11) % 12) + 1}:${String(m).padStart(2, '0')} ${h < 12 ? 'AM' : 'PM'}`; };
 const initials = (n) => String(n || '').split(/\s+/).map((w) => w[0]).join('').slice(0, 2).toUpperCase();
 function textOn(hex) {
   const n = parseInt(String(hex).replace('#', ''), 16);
@@ -34,7 +33,6 @@ function textOn(hex) {
   return lum > 0.6 ? '#2a2a2a' : '#ffffff';
 }
 const addDays = (iso, n) => { const d = new Date(`${iso}T12:00:00Z`); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
-const minutesOf = (hm) => { const [h, m] = hm.split(':').map(Number); return h * 60 + m; };
 
 // "Kennel 10" sorts after "Kennel 9".
 const natural = (a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' });
@@ -58,14 +56,6 @@ async function load(refresh) {
   } finally {
     busy = false;
   }
-}
-
-function slotState(dog, s) {
-  // Dim the walks before a dog arrives or after it leaves today (still tappable).
-  const start = s.hour * 60, end = start + 120;
-  if (dog.arrives && end <= minutesOf(dog.arrives)) return 'off';
-  if (dog.leaves && start >= minutesOf(dog.leaves)) return 'off';
-  return '';
 }
 
 function markHtml(dog, s) {
@@ -111,8 +101,8 @@ function render() {
   }
 
   const counts = d.slots.map((s) => dogs.filter((g) => (d.marks[g.pet_id] || {})[s.slot]).length);
-  let html = `<thead><tr><th class="dogcol">${dogs.length} dog${dogs.length === 1 ? '' : 's'}</th>${d.slots.map((s, i) =>
-    `<th class="${i === nowSlot ? 'now' : ''}">${s.label}<small>${counts[i]}/${dogs.length}</small></th>`).join('')}</tr></thead><tbody>`;
+  let html = `<colgroup><col class="dogcol-w">${d.slots.map(() => '<col>').join('')}</colgroup><thead><tr><th class="dogcol">${dogs.length} dog${dogs.length === 1 ? '' : 's'}</th>${d.slots.map((s, i) =>
+    `<th class="${i === nowSlot ? 'now' : ''}"><span class="long">${s.label}</span><span class="short">${s.label.replace(/ (A|P)M/, (m, x) => x.toLowerCase())}</span><small>${counts[i]}/${dogs.length}</small></th>`).join('')}</tr></thead><tbody>`;
   // First names only; add the last initial when two dogs share a first name.
   const first = (n) => String(n).trim().split(/\s+/)[0];
   const seen = {};
@@ -129,7 +119,7 @@ function render() {
     }
     const gone = g.gone ? ' <span class="tag">No longer in PawPartner</span>' : '';
     html += `<tr class="${g.gone ? 'gone' : ''}"><td class="dogcol"><div class="dog" title="${esc(g.name)}"><b>${esc(shortName(g))}</b>${gone}</div></td>`;
-    html += d.slots.map((s, i) => `<td class="${[i === nowSlot ? 'now' : '', slotState(g, s)].join(' ').trim()}">${markHtml(g, s)}</td>`).join('');
+    html += d.slots.map((s, i) => `<td class="${i === nowSlot ? 'now' : ''}">${markHtml(g, s)}</td>`).join('');
     html += '</tr>';
   }
   $('sheet').innerHTML = html + '</tbody>';
@@ -141,13 +131,14 @@ function render() {
     const dogW = $('sheet').querySelector('thead th').offsetWidth;
     if (th && th.offsetLeft + th.offsetWidth > wrap.clientWidth) wrap.scrollLeft = th.offsetLeft - dogW - 8;
   }
-  $('foot').textContent = 'Dogs come from the PawPartner dashboard (boarding and daycare; grooming-only visits are left out). Dashed boxes are before the dog arrives or after it leaves.';
+  $('foot').textContent = 'Dogs come from the PawPartner dashboard (boarding and daycare; grooming-only visits are left out).';
 }
 
 // Tap cycles empty → walk (✓) → poop (filled) → empty.
 const NEXT = { '': 'walk', walk: 'poop', poop: '' };
 $('sheet').addEventListener('click', async (e) => {
-  const b = e.target.closest('.mark');
+  // A tap anywhere in the cell counts, not just on the box itself.
+  const b = e.target.closest('.mark') || (e.target.closest('td') && e.target.closest('td').querySelector('.mark'));
   if (!b || b.disabled) return;
   const pet = Number(b.dataset.pet), slot = Number(b.dataset.slot);
   const cur = ((day.marks[pet] || {})[slot] || {}).mark || '';

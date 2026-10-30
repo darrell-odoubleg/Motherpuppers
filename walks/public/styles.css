@@ -9,7 +9,6 @@
   --box: #faf8fc;
   --warn: #b42318;
   --now: #f1ebfb;
-  --off: #efedf2;
 }
 @media (prefers-color-scheme: dark) {
   :root {
@@ -23,7 +22,6 @@
     --box: #2a2632;
     --warn: #ff7b72;
     --now: #2c2538;
-    --off: #1c1a22;
   }
 }
 * { box-sizing: border-box; }
@@ -71,50 +69,57 @@ main { max-width: 1200px; margin: 0 auto; padding: 12px 16px 40px; }
 .banner { background: var(--card); border: 1px solid var(--line); border-left: 4px solid var(--brand-tan); border-radius: 8px; padding: 10px 12px; margin-bottom: 12px; }
 .banner.err { border-left-color: var(--warn); }
 
-/* the sheet */
-.sheet-wrap { overflow-x: auto; width: fit-content; max-width: 100%; background: var(--card); border: 1px solid var(--line); border-radius: 10px; }
-.sheet { border-collapse: separate; border-spacing: 0; width: auto; }
-.sheet th, .sheet td { border-bottom: 1px solid var(--line); padding: 2px 3px; text-align: center; }
-.sheet thead th { position: sticky; top: 0; background: var(--card); font-size: 11px; white-space: nowrap; min-width: 38px; }
-.sheet thead th small { display: block; font-weight: 500; color: var(--muted); font-size: 10px; }
-.sheet .dogcol { text-align: left; position: sticky; left: 0; background: var(--card); z-index: 2; min-width: 84px; max-width: 120px; padding-left: 8px; border-right: 1px solid var(--line); }
+/* the sheet: fills the screen width; each walk box fills its cell */
+.sheet-wrap { overflow-x: auto; background: var(--card); border: 1px solid var(--line); border-radius: 10px; }
+.sheet { border-collapse: separate; border-spacing: 0; width: 100%; table-layout: fixed; }
+.sheet col.dogcol-w { width: clamp(76px, 18vw, 170px); }
+.sheet th, .sheet td { border-bottom: 1px solid var(--line); padding: 3px clamp(2px, .6vw, 6px); text-align: center; }
+.sheet thead th { position: sticky; top: 0; background: var(--card); font-size: clamp(10px, 1.6vw, 13px); white-space: nowrap; overflow: hidden; }
+.sheet thead th small { display: block; font-weight: 500; color: var(--muted); font-size: clamp(9px, 1.4vw, 11px); }
+.sheet .dogcol { text-align: left; position: sticky; left: 0; background: var(--card); z-index: 2; padding-left: clamp(6px, 1.2vw, 12px); border-right: 1px solid var(--line); overflow: hidden; }
 .sheet th.now, .sheet td.now { background: var(--now); }
 .sheet tr.kennel th { text-align: left; font-size: 10px; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); background: var(--box); padding: 1px 8px; }
 .sheet tr.kennel th.dogcol { background: var(--box); }
 .dog { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-.dog b { font-size: 13px; white-space: nowrap; }
-.tag { display: inline-block; font-size: 11px; font-weight: 700; padding: 1px 6px; border-radius: 5px; margin-top: 2px; background: var(--box); border: 1px solid var(--line); }
-.tag.in { border-color: #3d8b5a; color: #2f7a4b; }
-.tag.out { border-color: var(--brand-tan); color: #9a6a35; }
+.dog b { font-size: clamp(12px, 1.8vw, 15px); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.tag { display: inline-block; font-size: 10px; font-weight: 700; padding: 0 5px; border-radius: 5px; background: var(--box); border: 1px solid var(--line); white-space: nowrap; }
 tr.gone .dog { opacity: .5; }
-.tag { white-space: nowrap; }
-.tag .short { display: none; }
-@media (max-width: 600px) {
-  .sheet .dogcol { min-width: 72px; max-width: 96px; padding: 2px 3px 2px 6px; }
-  .dog b { font-size: 12px; }
-  .tag .long { display: none; }
-  .tag .short { display: inline; }
-  .tag { font-size: 10px; padding: 0 4px; }
-  .sheet { min-width: 0; }
-  .sheet th, .sheet td { padding: 2px 1px; }
-  .sheet thead th { min-width: 34px; font-size: 10px; }
-  .mark { width: 30px; height: 30px; }
-}
 
 .mark {
-  width: 30px; height: 30px; border: 2px solid var(--line); border-radius: 8px; background: var(--box); cursor: pointer;
-  display: inline-flex; flex-direction: column; align-items: center; justify-content: center; position: relative; padding: 0;
+  width: 100%; max-width: 72px; height: clamp(30px, 6vw, 44px); border: 2px solid var(--line); border-radius: 8px; background: var(--box); cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center; position: relative; padding: 0; vertical-align: middle;
+  touch-action: manipulation;
 }
-.mark.walk { border-color: var(--c); color: var(--c); font-size: 17px; font-weight: 900; line-height: 1; }
+.mark:hover:not(:disabled) { border-color: var(--accent); }
+.mark.walk { border-color: var(--c); color: var(--c); font-size: clamp(16px, 3vw, 24px); font-weight: 900; line-height: 1; }
 .mark.poop { background: var(--c); border-color: var(--c); }
-.mark .who { position: absolute; bottom: 1px; right: 2px; font-size: 8px; font-weight: 700; color: var(--muted); }
+.mark .who { position: absolute; bottom: 1px; right: 3px; font-size: 8px; font-weight: 700; color: var(--muted); }
 .mark.poop .who { color: var(--on); }
 .mark.walk .who { color: var(--c); }
 .mark:disabled { cursor: default; }
-td.off .mark:not(.walk):not(.poop) { background: var(--off); border-style: dashed; }
-.count { font-size: 11px; color: var(--muted); }
 .foot { font-size: 12px; margin-top: 10px; }
 .empty { padding: 30px; text-align: center; color: var(--muted); }
+
+.sheet thead .short { display: none; }
+@media (max-width: 420px) {
+  .sheet thead .long { display: none; }
+  .sheet thead .short { display: inline; }
+}
+
+/* header on small screens: one compact block */
+@media (max-width: 600px) {
+  .top-row, .day-row, .legend { padding: 6px 10px 4px; gap: 6px; }
+  .me { display: none; }
+  #logout { padding: 5px 9px; font-size: 13px; }
+  .day-row h2 { font-size: 15px; }
+  .btn.icon { padding: 2px 10px; }
+  #refresh { padding: 5px 9px; font-size: 13px; }
+  .sync { order: 9; width: 100%; font-size: 11px; }
+  .legend { font-size: 12px; gap: 12px; padding-bottom: 8px; }
+  .legend .muted { display: none; }
+  .key { width: 16px; height: 16px; font-size: 11px; }
+  main { padding: 8px 6px 30px; }
+}
 
 /* login */
 .login-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 16px; }
@@ -133,6 +138,7 @@ td.off .mark:not(.walk):not(.poop) { background: var(--off); border-style: dashe
   .me, #logout, .day-row .btn, .sync, .legend .muted { display: none !important; }
   .sheet-wrap { overflow: visible; border: 0; }
   .sheet .dogcol, .sheet thead th { position: static; }
-  .mark { width: 26px; height: 26px; }
+  .mark { height: 26px; }
+  .sheet thead th { position: static; }
   @page { size: landscape; margin: 10mm; }
 }
