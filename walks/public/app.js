@@ -113,6 +113,14 @@ function render() {
   const counts = d.slots.map((s) => dogs.filter((g) => (d.marks[g.pet_id] || {})[s.slot]).length);
   let html = `<thead><tr><th class="dogcol">${dogs.length} dog${dogs.length === 1 ? '' : 's'}</th>${d.slots.map((s, i) =>
     `<th class="${i === nowSlot ? 'now' : ''}">${s.label}<small>${counts[i]}/${dogs.length}</small></th>`).join('')}</tr></thead><tbody>`;
+  // First names only; add the last initial when two dogs share a first name.
+  const first = (n) => String(n).trim().split(/\s+/)[0];
+  const seen = {};
+  dogs.forEach((g) => { seen[first(g.name)] = (seen[first(g.name)] || 0) + 1; });
+  const shortName = (g) => {
+    const parts = String(g.name).trim().split(/\s+/);
+    return seen[parts[0]] > 1 && parts[1] ? `${parts[0]} ${parts[1][0]}.` : parts[0];
+  };
   let lastKennel = null;
   for (const g of dogs) {
     if (g.kennel !== lastKennel) {
@@ -120,7 +128,7 @@ function render() {
       html += `<tr class="kennel"><th class="dogcol">${esc(g.kennel || 'No kennel')}</th><th colspan="${d.slots.length}"></th></tr>`;
     }
     const gone = g.gone ? ' <span class="tag">No longer in PawPartner</span>' : '';
-    html += `<tr class="${g.gone ? 'gone' : ''}"><td class="dogcol"><div class="dog"><b>${esc(g.name)}</b>${gone}</div></td>`;
+    html += `<tr class="${g.gone ? 'gone' : ''}"><td class="dogcol"><div class="dog" title="${esc(g.name)}"><b>${esc(shortName(g))}</b>${gone}</div></td>`;
     html += d.slots.map((s, i) => `<td class="${[i === nowSlot ? 'now' : '', slotState(g, s)].join(' ').trim()}">${markHtml(g, s)}</td>`).join('');
     html += '</tr>';
   }

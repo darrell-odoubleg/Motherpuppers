@@ -72,17 +72,17 @@ main { max-width: 1200px; margin: 0 auto; padding: 12px 16px 40px; }
 .banner.err { border-left-color: var(--warn); }
 
 /* the sheet */
-.sheet-wrap { overflow-x: auto; background: var(--card); border: 1px solid var(--line); border-radius: 10px; }
-.sheet { border-collapse: separate; border-spacing: 0; width: 100%; min-width: 720px; }
-.sheet th, .sheet td { border-bottom: 1px solid var(--line); padding: 3px 6px; text-align: center; }
-.sheet thead th { position: sticky; top: 0; background: var(--card); font-size: 13px; white-space: nowrap; }
-.sheet thead th small { display: block; font-weight: 500; color: var(--muted); font-size: 11px; }
-.sheet .dogcol { text-align: left; position: sticky; left: 0; background: var(--card); z-index: 2; min-width: 150px; max-width: 220px; border-right: 1px solid var(--line); }
+.sheet-wrap { overflow-x: auto; width: fit-content; max-width: 100%; background: var(--card); border: 1px solid var(--line); border-radius: 10px; }
+.sheet { border-collapse: separate; border-spacing: 0; width: auto; }
+.sheet th, .sheet td { border-bottom: 1px solid var(--line); padding: 2px 3px; text-align: center; }
+.sheet thead th { position: sticky; top: 0; background: var(--card); font-size: 11px; white-space: nowrap; min-width: 38px; }
+.sheet thead th small { display: block; font-weight: 500; color: var(--muted); font-size: 10px; }
+.sheet .dogcol { text-align: left; position: sticky; left: 0; background: var(--card); z-index: 2; min-width: 84px; max-width: 120px; padding-left: 8px; border-right: 1px solid var(--line); }
 .sheet th.now, .sheet td.now { background: var(--now); }
-.sheet tr.kennel th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: .6px; color: var(--muted); background: var(--box); padding: 3px 10px; }
+.sheet tr.kennel th { text-align: left; font-size: 10px; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); background: var(--box); padding: 1px 8px; }
 .sheet tr.kennel th.dogcol { background: var(--box); }
 .dog { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-.dog b { font-size: 14px; }
+.dog b { font-size: 13px; white-space: nowrap; }
 .tag { display: inline-block; font-size: 11px; font-weight: 700; padding: 1px 6px; border-radius: 5px; margin-top: 2px; background: var(--box); border: 1px solid var(--line); }
 .tag.in { border-color: #3d8b5a; color: #2f7a4b; }
 .tag.out { border-color: var(--brand-tan); color: #9a6a35; }
@@ -90,23 +90,24 @@ tr.gone .dog { opacity: .5; }
 .tag { white-space: nowrap; }
 .tag .short { display: none; }
 @media (max-width: 600px) {
-  .sheet .dogcol { min-width: 110px; max-width: 110px; padding: 3px 4px 3px 8px; }
-  .dog b { font-size: 13px; line-height: 1.2; word-break: break-word; }
+  .sheet .dogcol { min-width: 72px; max-width: 96px; padding: 2px 3px 2px 6px; }
+  .dog b { font-size: 12px; }
   .tag .long { display: none; }
   .tag .short { display: inline; }
   .tag { font-size: 10px; padding: 0 4px; }
   .sheet { min-width: 0; }
-  .sheet th, .sheet td { padding: 3px 2px; }
-  .mark { width: 34px; height: 34px; }
+  .sheet th, .sheet td { padding: 2px 1px; }
+  .sheet thead th { min-width: 34px; font-size: 10px; }
+  .mark { width: 30px; height: 30px; }
 }
 
 .mark {
-  width: 36px; height: 36px; border: 2px solid var(--line); border-radius: 8px; background: var(--box); cursor: pointer;
+  width: 30px; height: 30px; border: 2px solid var(--line); border-radius: 8px; background: var(--box); cursor: pointer;
   display: inline-flex; flex-direction: column; align-items: center; justify-content: center; position: relative; padding: 0;
 }
-.mark.walk { border-color: var(--c); color: var(--c); font-size: 20px; font-weight: 900; line-height: 1; }
+.mark.walk { border-color: var(--c); color: var(--c); font-size: 17px; font-weight: 900; line-height: 1; }
 .mark.poop { background: var(--c); border-color: var(--c); }
-.mark .who { position: absolute; bottom: 2px; right: 4px; font-size: 9px; font-weight: 700; color: var(--muted); }
+.mark .who { position: absolute; bottom: 1px; right: 2px; font-size: 8px; font-weight: 700; color: var(--muted); }
 .mark.poop .who { color: var(--on); }
 .mark.walk .who { color: var(--c); }
 .mark:disabled { cursor: default; }
@@ -132,6 +133,6 @@ td.off .mark:not(.walk):not(.poop) { background: var(--off); border-style: dashe
   .me, #logout, .day-row .btn, .sync, .legend .muted { display: none !important; }
   .sheet-wrap { overflow: visible; border: 0; }
   .sheet .dogcol, .sheet thead th { position: static; }
-  .mark { width: 30px; height: 30px; }
+  .mark { width: 26px; height: 26px; }
   @page { size: landscape; margin: 10mm; }
 }
