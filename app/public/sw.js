@@ -1,7 +1,7 @@
 // Keeps the app shell (tab bar and icons) available offline. The three sites inside
 // the tabs are always loaded live and are never cached here.
-const CACHE = 'mp-shell-v1';
-const SHELL = ['/', '/manifest.webmanifest', '/icon-192.png', '/favicon.png'];
+const CACHE = 'mp-shell-v2';
+const SHELL = ['/', '/manifest.webmanifest', '/icon-192.png', '/favicon.png', '/logo.png', '/logo-dark.png'];
 
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting()));
@@ -11,7 +11,7 @@ self.addEventListener('activate', (e) => {
 });
 self.addEventListener('fetch', (e) => {
   const url = new URL(e.request.url);
-  if (e.request.method !== 'GET' || url.origin !== location.origin) return;
+  if (e.request.method !== 'GET' || url.origin !== location.origin || url.pathname.startsWith('/api/')) return;
   // Network first so updates show up right away; fall back to the cached shell.
   e.respondWith(
     fetch(e.request)

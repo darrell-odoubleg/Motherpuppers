@@ -20,7 +20,7 @@
       body: opts.body ? JSON.stringify(opts.body) : undefined,
     });
     const out = await res.json().catch(() => ({}));
-    if (res.status === 401) { showLogin(); throw new Error('Signed out'); }
+    if (res.status === 401) { showLogin(out.no_access ? out.error : ''); throw new Error('Signed out'); }
     if (!res.ok) throw new Error(out.error || `Request failed (${res.status})`);
     return out;
   }
@@ -54,9 +54,12 @@
   }
 
   // ---------- auth ----------
-  function showLogin() {
+  function showLogin(msg) {
     $('#app').classList.add('hidden');
     $('#login').classList.remove('hidden');
+    $('#loginErr').textContent = msg || '';
+    // Inside the Mother Puppers app, let the app show its own (single) sign-in screen.
+    if (window.top !== window) window.parent.postMessage('mp-signed-out', 'https://app.motherpuppers.net');
   }
 
   $('#loginForm').addEventListener('submit', async e => {

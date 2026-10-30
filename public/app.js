@@ -25,14 +25,17 @@ function toast(msg) {
 async function api(path, opts = {}) {
   const res = await fetch(path, { headers: { 'Content-Type': 'application/json' }, ...opts });
   const data = await res.json().catch(() => ({}));
-  if (res.status === 401) { showLogin(); throw new Error('signed out'); }
+  if (res.status === 401) { showLogin(data.no_access ? data.error : ''); throw new Error('signed out'); }
   if (!res.ok) throw new Error(data.error || 'Something went wrong');
   return data;
 }
 
-function showLogin() {
+function showLogin(msg) {
   $('app').classList.add('hidden');
   $('login').classList.remove('hidden');
+  $('loginErr').textContent = msg || '';
+  // Inside the Mother Puppers app, let the app show its own (single) sign-in screen.
+  if (window.top !== window) window.parent.postMessage('mp-signed-out', 'https://app.motherpuppers.net');
   $('u').focus();
 }
 

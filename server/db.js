@@ -59,6 +59,9 @@ db.exec(`
   CREATE TABLE IF NOT EXISTS sessions (sid TEXT PRIMARY KEY, data TEXT NOT NULL, expires INTEGER NOT NULL);
 `);
 
+// Which Mother Puppers sites each login can open (JSON list; NULL = all). See shared/mpauth.js.
+if (!db.prepare('PRAGMA table_info(users)').all().some((c) => c.name === 'apps')) db.exec('ALTER TABLE users ADD COLUMN apps TEXT');
+
 const DEFAULT_SETTINGS = {
   timezone: process.env.TZ_DEFAULT || 'America/Denver',
   summer_months: '[5,6,7,8,9]',

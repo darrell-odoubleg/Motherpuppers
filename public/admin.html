@@ -32,6 +32,11 @@
         <div><label>Password</label><input type="text" id="nPass" autocomplete="off"></div>
         <div style="flex:0 0 auto"><label>Color</label><input type="color" id="nColor" value="#3b82f6"></div>
         <div style="flex:0 0 auto"><label><input type="checkbox" id="nAdmin"> Admin</label></div>
+        <div style="flex:0 0 auto"><label>Can use</label><span class="apps" id="nApps">
+          <label><input type="checkbox" value="walks" checked> Dog walks</label>
+          <label><input type="checkbox" value="cleaning" checked> Cleaning</label>
+          <label><input type="checkbox" value="schedule" checked> Schedule</label>
+        </span></div>
         <div style="flex:0 0 auto"><button class="btn primary" id="addUser">Add</button></div>
       </div>
       <div class="err" id="addErr"></div>
@@ -39,10 +44,11 @@
     <h2>Staff</h2>
     <div class="card table-wrap">
       <table>
-        <thead><tr><th>Color</th><th>Name</th><th>Username</th><th>Admin</th><th>Active</th><th>New password</th><th></th></tr></thead>
+        <thead><tr><th>Color</th><th>Name</th><th>Username</th><th>Admin</th><th>Active</th><th>Dog walks</th><th>Cleaning</th><th>Schedule</th><th>New password</th><th></th></tr></thead>
         <tbody id="users"></tbody>
       </table>
-      <p class="muted">Changing a color also recolors boxes that person already checked. Turn someone off with Active instead of deleting, so their past checks keep their name.</p>
+      <p class="muted">Changing a color also recolors boxes that person already checked. Turn someone off with Active instead of deleting, so their past checks keep their name.
+        Dog walks / Cleaning / Schedule set which apps a login can open (one sign-in covers all of them). Admins can always open everything.</p>
     </div>
   </div>
 

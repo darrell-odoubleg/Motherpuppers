@@ -192,3 +192,6 @@ input[type=color] { width: 48px; height: 38px; padding: 2px; border: 1px solid v
 @media (max-width: 720px) {
   .ed-task { grid-template-columns: 1fr 1fr; }
 }
+/* admin: which apps a new login can use */
+.apps { display: flex; gap: 10px; flex-wrap: wrap; }
+.apps label { display: inline-flex; align-items: center; gap: 4px; margin: 0; color: var(--ink); font-size: 13px; }

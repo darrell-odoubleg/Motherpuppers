@@ -9,8 +9,8 @@ let scrolledFor = null;
 
 async function api(path, opts = {}) {
   const res = await fetch(path, { headers: { 'Content-Type': 'application/json' }, ...opts });
-  if (res.status === 401) { showLogin(); throw new Error('Not signed in'); }
   const data = await res.json().catch(() => ({}));
+  if (res.status === 401) { showLogin(data.no_access ? data.error : ''); throw new Error('Not signed in'); }
   if (!res.ok) throw new Error(data.error || `Error ${res.status}`);
   return data;
 }
@@ -37,9 +37,12 @@ const addDays = (iso, n) => { const d = new Date(`${iso}T12:00:00Z`); d.setUTCDa
 // "Kennel 10" sorts after "Kennel 9".
 const natural = (a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' });
 
-function showLogin() {
+function showLogin(msg) {
   $('app').classList.add('hidden');
   $('login').classList.remove('hidden');
+  $('loginErr').textContent = msg || '';
+  // Inside the Mother Puppers app, let the app show its own (single) sign-in screen.
+  if (window.top !== window) window.parent.postMessage('mp-signed-out', 'https://app.motherpuppers.net');
 }
 
 async function load(refresh) {

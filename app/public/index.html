@@ -46,12 +46,34 @@
   .tip a { color: var(--accent); font-weight: 700; }
   .tip button { border: 0; background: none; font-size: 20px; color: var(--muted); cursor: pointer; }
   .hidden { display: none !important; }
+  .login-wrap { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; padding: 16px; padding-top: calc(16px + env(safe-area-inset-top)); background: var(--bg); z-index: 30; overflow: auto; }
+  .login { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 24px; width: 100%; max-width: 360px; }
+  .login img { display: block; width: 100%; max-width: 240px; height: auto; margin: 0 auto 8px; }
+  .login p { text-align: center; color: var(--muted); margin: 0 0 12px; }
+  .login label { display: block; font-size: 13px; font-weight: 600; margin: 10px 0 4px; }
+  .login input { width: 100%; padding: 10px 11px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--ink); font: inherit; font-size: 16px; }
+  .login button { width: 100%; margin-top: 16px; padding: 11px; border: 0; border-radius: 8px; background: #7357a4; color: #fff; font: inherit; font-weight: 700; cursor: pointer; }
+  .login .err { color: #b42318; min-height: 1.2em; margin-top: 8px; font-size: 13px; }
+  @media (prefers-color-scheme: dark) { .login .err { color: #ff7b72; } }
 </style>
 </head>
 <body>
+<div class="login-wrap hidden" id="login">
+  <form class="login" id="loginForm">
+    <picture><source srcset="/logo-dark.png" media="(prefers-color-scheme: dark)"><img src="/logo.png" alt="Mother Puppers" width="640" height="334"></picture>
+    <p>Sign in once for dog walks, cleaning and the schedule</p>
+    <label for="u">Username</label>
+    <input type="text" id="u" autocomplete="username" autocapitalize="none" required>
+    <label for="p">Password</label>
+    <input type="password" id="p" autocomplete="current-password" required>
+    <button type="submit">Sign in</button>
+    <div class="err" id="loginErr"></div>
+  </form>
+</div>
+
 <div class="frames" id="frames"><div class="loading" id="loading">Loading…</div></div>
 
-<nav class="tabbar" role="tablist" aria-label="Mother Puppers">
+<nav class="tabbar hidden" id="tabbar" role="tablist" aria-label="Mother Puppers">
   <button role="tab" data-tab="walks" aria-selected="false">
     <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><ellipse cx="6" cy="9" rx="2.2" ry="2.8"/><ellipse cx="10.2" cy="5.5" rx="2.2" ry="2.8"/><ellipse cx="14.6" cy="5.5" rx="2.2" ry="2.8"/><ellipse cx="18.6" cy="9" rx="2.2" ry="2.8"/><path d="M12.3 11c-2.6 0-6.3 4.4-6.3 7.1 0 2.3 2 2.9 3.4 2.9 1.3 0 2-.6 2.9-.6s1.6.6 2.9.6c1.4 0 3.4-.6 3.4-2.9 0-2.7-3.7-7.1-6.3-7.1z"/></svg>
     Dog walks
@@ -81,9 +103,11 @@ const store = {
   set(k, v) { try { localStorage.setItem(k, v); } catch {} },
 };
 const frames = {};
+let allowed = [];
 
 function show(tab, reload) {
-  if (!SITES[tab]) tab = 'walks';
+  if (!allowed.includes(tab)) tab = allowed[0];
+  if (!tab) return;
   let f = frames[tab];
   if (!f) {
     f = frames[tab] = document.createElement('iframe');
@@ -107,7 +131,53 @@ document.querySelector('.tabbar').addEventListener('click', (e) => {
   show(b.dataset.tab, b.getAttribute('aria-selected') === 'true');
 });
 
-show((location.hash || '').slice(1) || store.get('mp-tab') || 'walks');
+// One sign-in for all three sites: the shell signs in through the cleaning app (proxied
+// at /api/app/ by nginx), which sets the shared motherpuppers.net cookie the tabs all use.
+async function boot() {
+  const res = await fetch('/api/app/session', { cache: 'no-store' }).catch(() => null);
+  if (!res || !res.ok) return showLogin();
+  const me = await res.json();
+  allowed = me.apps || [];
+  if (!allowed.length) return showLogin("Your login isn't set up for any Mother Puppers app yet. Ask an admin.");
+  document.getElementById('login').classList.add('hidden');
+  document.querySelectorAll('.tabbar button').forEach((b) => b.classList.toggle('hidden', !allowed.includes(b.dataset.tab)));
+  // One app only: no need for a tab bar.
+  document.getElementById('tabbar').classList.toggle('hidden', allowed.length < 2);
+  document.documentElement.style.setProperty('--tabbar', allowed.length < 2 ? 'env(safe-area-inset-bottom)' : 'calc(58px + env(safe-area-inset-bottom))');
+  show((location.hash || '').slice(1) || store.get('mp-tab') || allowed[0]);
+}
+
+function showLogin(msg) {
+  for (const k of Object.keys(frames)) { frames[k].remove(); delete frames[k]; }
+  document.getElementById('tabbar').classList.add('hidden');
+  document.getElementById('loginErr').textContent = msg || '';
+  document.getElementById('login').classList.remove('hidden');
+}
+
+document.getElementById('loginForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const err = document.getElementById('loginErr');
+  err.textContent = '';
+  try {
+    const res = await fetch('/api/app/login', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: document.getElementById('u').value, password: document.getElementById('p').value }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) { err.textContent = data.error || 'Sign in failed'; return; }
+    document.getElementById('p').value = '';
+    boot();
+  } catch {
+    err.textContent = 'No connection. Try again.';
+  }
+});
+
+// A tab signed out (its Sign out button, or the sign-in ran out): back to the one sign-in screen.
+window.addEventListener('message', (e) => {
+  if (e.data === 'mp-signed-out' && /^https:\/\/[a-z]+\.motherpuppers\.net$/.test(e.origin)) showLogin();
+});
+
+boot();
 
 // Install tips for people using the plain website: Android gets the app download,
 // iPhone gets the Add to Home Screen steps. Nothing shows inside the installed app.

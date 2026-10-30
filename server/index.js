@@ -1,8 +1,8 @@
 require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') });
 const path = require('path');
 const express = require('express');
-const session = require('express-session');
-const { db, getSettings, hashPassword, checkPassword } = require('./db');
+const { db, getSettings, hashPassword } = require('./db');
+const mpauth = require('../shared/mpauth');
 const { periodsAt, periodsForDate } = require('./periods');
 
 const PORT = process.env.PORT || 4100;
@@ -10,51 +10,8 @@ const app = express();
 app.set('trust proxy', 1);
 app.use(express.json());
 
-// Sessions live in SQLite so restarts don't sign everyone out.
-class SqliteStore extends session.Store {
-  get(sid, cb) {
-    const row = db.prepare('SELECT data, expires FROM sessions WHERE sid = ?').get(sid);
-    if (!row || row.expires < Date.now()) return cb(null, null);
-    cb(null, JSON.parse(row.data));
-  }
-  set(sid, sess, cb) {
-    const expires = sess.cookie && sess.cookie.expires ? new Date(sess.cookie.expires).getTime() : Date.now() + 86400000;
-    db.prepare('INSERT OR REPLACE INTO sessions (sid, data, expires) VALUES (?, ?, ?)').run(sid, JSON.stringify(sess), expires);
-    cb && cb(null);
-  }
-  destroy(sid, cb) {
-    db.prepare('DELETE FROM sessions WHERE sid = ?').run(sid);
-    cb && cb(null);
-  }
-  touch(sid, sess, cb) { this.set(sid, sess, cb); }
-}
-setInterval(() => db.prepare('DELETE FROM sessions WHERE expires < ?').run(Date.now()), 3600000).unref();
-
-app.use(session({
-  store: new SqliteStore(),
-  secret: process.env.SESSION_SECRET,
-  resave: false,
-  saveUninitialized: false,
-  rolling: true,
-  cookie: { httpOnly: true, sameSite: 'lax', secure: process.env.COOKIE_SECURE === '1', maxAge: 14 * 86400000 },
-}));
-
-// ---------- auth ----------
-const MAX_FAILS = 8;
-const WINDOW_MS = 15 * 60 * 1000;
-const fails = new Map();
-
-function currentUser(req) {
-  if (!req.session || !req.session.userId) return null;
-  return db.prepare('SELECT id, name, username, color, is_admin FROM users WHERE id = ? AND active = 1').get(req.session.userId) || null;
-}
-
-function requireUser(req, res, next) {
-  const u = currentUser(req);
-  if (!u) return res.status(401).json({ error: 'Not signed in' });
-  req.user = u;
-  next();
-}
+// ---------- auth (one sign-in across the Mother Puppers sites, see shared/mpauth.js) ----------
+const requireUser = mpauth.requireApp(db, 'cleaning');
 
 function requireAdmin(req, res, next) {
   requireUser(req, res, () => {
@@ -63,29 +20,18 @@ function requireAdmin(req, res, next) {
   });
 }
 
-app.post('/api/login', (req, res) => {
-  const now = Date.now();
-  const entry = fails.get(req.ip);
-  if (entry && now - entry.first < WINDOW_MS && entry.count >= MAX_FAILS) {
-    return res.status(429).json({ error: 'Too many attempts — try again in 15 minutes' });
-  }
-  const { username, password } = req.body || {};
-  const u = db.prepare('SELECT id, pass_hash FROM users WHERE username = ? AND active = 1').get(String(username || '').trim());
-  if (u && checkPassword(password, u.pass_hash)) {
-    fails.delete(req.ip);
-    return req.session.regenerate(() => {
-      req.session.userId = u.id;
-      res.json({ ok: true });
-    });
-  }
-  if (!entry || now - entry.first >= WINDOW_MS) fails.set(req.ip, { first: now, count: 1 });
-  else entry.count += 1;
-  res.status(401).json({ error: 'Wrong username or password' });
-});
-
-app.post('/api/logout', (req, res) => req.session.destroy(() => res.json({ ok: true })));
-
+app.post('/api/login', mpauth.loginRoute(db, 'cleaning'));
+app.post('/api/logout', mpauth.logoutRoute);
 app.get('/api/me', requireUser, (req, res) => res.json(req.user));
+
+// For the app.motherpuppers.net shell (proxied there by nginx): who is signed in and
+// which sites they can open. Works for any active login, whatever their sites.
+app.post('/api/app/login', mpauth.loginRoute(db, null));
+app.get('/api/app/session', (req, res) => {
+  const u = mpauth.userFrom(req, res, db);
+  if (!u) return res.status(401).json({ error: 'Not signed in' });
+  res.set('Cache-Control', 'no-store').json(u);
+});
 
 // ---------- board ----------
 function seasonActive(season, month, settings) {
@@ -164,18 +110,21 @@ app.post('/api/check', requireUser, (req, res) => {
 
 // ---------- admin: staff ----------
 const HEX = /^#[0-9a-fA-F]{6}$/;
+// Which sites a login may open, stored as a JSON list (NULL = all of them).
+const cleanApps = (v) => JSON.stringify(mpauth.APPS.filter((a) => Array.isArray(v) && v.includes(a)));
 
 app.get('/api/admin/users', requireAdmin, (req, res) => {
-  res.json(db.prepare('SELECT id, name, username, color, is_admin, active, created_at FROM users ORDER BY active DESC, name').all());
+  res.json(db.prepare('SELECT id, name, username, color, is_admin, active, apps, created_at FROM users ORDER BY active DESC, name').all()
+    .map((u) => ({ ...u, apps: mpauth.parseApps(u.apps, u.is_admin) })));
 });
 
 app.post('/api/admin/users', requireAdmin, (req, res) => {
-  const { name, username, password, color, is_admin } = req.body || {};
+  const { name, username, password, color, is_admin, apps } = req.body || {};
   if (!name || !username || !password) return res.status(400).json({ error: 'Name, username and password are required' });
   if (color && !HEX.test(color)) return res.status(400).json({ error: 'Bad color' });
   try {
-    const r = db.prepare('INSERT INTO users (name, username, pass_hash, color, is_admin) VALUES (?, ?, ?, ?, ?)')
-      .run(String(name).trim(), String(username).trim(), hashPassword(password), color || '#3b82f6', is_admin ? 1 : 0);
+    const r = db.prepare('INSERT INTO users (name, username, pass_hash, color, is_admin, apps) VALUES (?, ?, ?, ?, ?, ?)')
+      .run(String(name).trim(), String(username).trim(), hashPassword(password), color || '#3b82f6', is_admin ? 1 : 0, apps ? cleanApps(apps) : null);
     res.json({ id: r.lastInsertRowid });
   } catch (e) {
     res.status(400).json({ error: /UNIQUE/.test(e.message) ? 'That username is taken' : e.message });
@@ -190,12 +139,13 @@ app.put('/api/admin/users/:id', requireAdmin, (req, res) => {
   if (b.color && !HEX.test(b.color)) return res.status(400).json({ error: 'Bad color' });
   if (id === req.user.id && (b.is_admin === false || b.active === false)) return res.status(400).json({ error: 'You can’t remove your own admin access' });
   try {
-    db.prepare('UPDATE users SET name = ?, username = ?, color = ?, is_admin = ?, active = ? WHERE id = ?').run(
+    db.prepare('UPDATE users SET name = ?, username = ?, color = ?, is_admin = ?, active = ?, apps = ? WHERE id = ?').run(
       b.name != null ? String(b.name).trim() : u.name,
       b.username != null ? String(b.username).trim() : u.username,
       b.color || u.color,
       b.is_admin != null ? (b.is_admin ? 1 : 0) : u.is_admin,
       b.active != null ? (b.active ? 1 : 0) : u.active,
+      b.apps !== undefined ? cleanApps(b.apps) : u.apps,
       id,
     );
     if (b.password) db.prepare('UPDATE users SET pass_hash = ? WHERE id = ?').run(hashPassword(b.password), id);

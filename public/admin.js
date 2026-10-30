@@ -28,6 +28,8 @@ $('tabs').addEventListener('click', (e) => {
 });
 
 // ---------- staff ----------
+// The Mother Puppers apps a login can be given (matches shared/mpauth.js).
+const APPS = ['walks', 'cleaning', 'schedule'];
 async function loadUsers() {
   const users = await api('/api/admin/users');
   $('users').innerHTML = users.map((u) => `
@@ -37,6 +39,7 @@ async function loadUsers() {
       <td><input type="text" data-f="username" value="${esc(u.username)}" autocapitalize="none"></td>
       <td><input type="checkbox" data-f="is_admin" ${u.is_admin ? 'checked' : ''}></td>
       <td><input type="checkbox" data-f="active" ${u.active ? 'checked' : ''}></td>
+      ${APPS.map((a) => `<td><input type="checkbox" data-app="${a}" ${u.apps.includes(a) ? 'checked' : ''} ${u.is_admin ? 'disabled title="Admins can always open every app"' : ''} aria-label="${a}"></td>`).join('')}
       <td><input type="text" data-f="password" placeholder="leave blank" autocomplete="off"></td>
       <td><button class="btn" data-save>Save</button></td>
     </tr>`).join('');
@@ -49,6 +52,7 @@ $('users').addEventListener('click', async (e) => {
   const body = {
     color: v('color').value, name: v('name').value, username: v('username').value,
     is_admin: v('is_admin').checked, active: v('active').checked,
+    apps: [...tr.querySelectorAll('[data-app]:checked')].map((c) => c.dataset.app),
   };
   if (v('password').value) body.password = v('password').value;
   try {
@@ -64,6 +68,7 @@ $('addUser').addEventListener('click', async () => {
     await send('POST', '/api/admin/users', {
       name: $('nName').value, username: $('nUser').value, password: $('nPass').value,
       color: $('nColor').value, is_admin: $('nAdmin').checked,
+      apps: [...$('nApps').querySelectorAll('input:checked')].map((c) => c.value),
     });
     for (const id of ['nName', 'nUser', 'nPass']) $(id).value = '';
     $('nAdmin').checked = false;

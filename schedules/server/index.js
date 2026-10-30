@@ -1,8 +1,7 @@
 require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') });
 const path = require('path');
-const crypto = require('crypto');
 const express = require('express');
-const session = require('express-session');
+const mpauth = require('../../shared/mpauth');
 const { db, users, getSettings, FIRST_SLOT_MIN, SLOT_COUNT, LANES } = require('./db');
 
 const PORT = process.env.PORT || 4300;
@@ -10,63 +9,16 @@ const app = express();
 app.set('trust proxy', 1);
 app.use(express.json({ limit: '1mb' }));
 
-// Sessions live in SQLite so restarts don't sign everyone out.
-class SqliteStore extends session.Store {
-  get(sid, cb) {
-    const row = db.prepare('SELECT data, expires FROM sessions WHERE sid = ?').get(sid);
-    if (!row || row.expires < Date.now()) return cb(null, null);
-    cb(null, JSON.parse(row.data));
-  }
-  set(sid, sess, cb) {
-    const expires = sess.cookie && sess.cookie.expires ? new Date(sess.cookie.expires).getTime() : Date.now() + 86400000;
-    db.prepare('INSERT OR REPLACE INTO sessions (sid, data, expires) VALUES (?, ?, ?)').run(sid, JSON.stringify(sess), expires);
-    cb && cb(null);
-  }
-  destroy(sid, cb) {
-    db.prepare('DELETE FROM sessions WHERE sid = ?').run(sid);
-    cb && cb(null);
-  }
-  touch(sid, sess, cb) { this.set(sid, sess, cb); }
-}
-setInterval(() => db.prepare('DELETE FROM sessions WHERE expires < ?').run(Date.now()), 3600000).unref();
+// ---------- auth (one sign-in across the Mother Puppers sites, see ../../shared/mpauth.js) ----------
+const signedIn = mpauth.requireApp(users, 'schedule');
 
-app.use(session({
-  store: new SqliteStore(),
-  name: 'mp.schedules.sid',
-  secret: process.env.SESSION_SECRET,
-  resave: false,
-  saveUninitialized: false,
-  rolling: true,
-  cookie: { httpOnly: true, sameSite: 'lax', secure: process.env.COOKIE_SECURE === '1', maxAge: 14 * 86400000 },
-}));
-
-// ---------- auth (cleaning app's users) ----------
-const MAX_FAILS = 8;
-const WINDOW_MS = 15 * 60 * 1000;
-const fails = new Map();
-
-// Same scheme as the cleaning app's db.js (salt:scrypt64).
-function checkPassword(pw, stored) {
-  const [salt, hash] = String(stored).split(':');
-  if (!salt || !hash) return false;
-  const a = Buffer.from(hash, 'hex');
-  const b = crypto.scryptSync(String(pw), salt, 64);
-  return a.length === b.length && crypto.timingSafeEqual(a, b);
-}
-
-function currentUser(req) {
-  if (!req.session || !req.session.userId) return null;
-  const u = users.prepare('SELECT id, name, username, color, is_admin FROM users WHERE id = ? AND active = 1').get(req.session.userId);
-  if (!u) return null;
-  const p = db.prepare('SELECT id FROM people WHERE user_id = ? AND active = 1').get(u.id);
-  return { ...u, person_id: p ? p.id : null };
-}
-
+// Adds the schedule person linked to the login, if any.
 function requireUser(req, res, next) {
-  const u = currentUser(req);
-  if (!u) return res.status(401).json({ error: 'Not signed in' });
-  req.user = u;
-  next();
+  signedIn(req, res, () => {
+    const p = db.prepare('SELECT id FROM people WHERE user_id = ? AND active = 1').get(req.user.id);
+    req.user = { ...req.user, person_id: p ? p.id : null };
+    next();
+  });
 }
 
 function requireAdmin(req, res, next) {
@@ -76,27 +28,8 @@ function requireAdmin(req, res, next) {
   });
 }
 
-app.post('/api/login', (req, res) => {
-  const now = Date.now();
-  const entry = fails.get(req.ip);
-  if (entry && now - entry.first < WINDOW_MS && entry.count >= MAX_FAILS) {
-    return res.status(429).json({ error: 'Too many attempts — try again in 15 minutes' });
-  }
-  const { username, password } = req.body || {};
-  const u = users.prepare('SELECT id, pass_hash FROM users WHERE username = ? AND active = 1').get(String(username || '').trim());
-  if (u && checkPassword(password, u.pass_hash)) {
-    fails.delete(req.ip);
-    return req.session.regenerate(() => {
-      req.session.userId = u.id;
-      res.json({ ok: true });
-    });
-  }
-  if (!entry || now - entry.first >= WINDOW_MS) fails.set(req.ip, { first: now, count: 1 });
-  else entry.count += 1;
-  res.status(401).json({ error: 'Wrong username or password' });
-});
-
-app.post('/api/logout', (req, res) => req.session.destroy(() => res.json({ ok: true })));
+app.post('/api/login', mpauth.loginRoute(users, 'schedule'));
+app.post('/api/logout', mpauth.logoutRoute);
 app.get('/api/me', requireUser, (req, res) => res.json(req.user));
 
 // ---------- dates ----------
