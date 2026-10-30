@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mother Puppers</title>
+<meta name="theme-color" content="#7357a4">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Mother Puppers">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" type="image/png" href="/favicon.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<style>
+  :root {
+    --bg: #f7f5fa; --card: #ffffff; --ink: #2a2a2a; --muted: #6b6775; --line: #e5e0ec; --accent: #7357a4;
+    --tabbar: calc(58px + env(safe-area-inset-bottom));
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #17151c; --card: #211e28; --ink: #eeecf2; --muted: #a49fae; --line: #35313e; --accent: #a78bdb; }
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--ink); font: 14px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; overflow: hidden; }
+  body { padding-top: env(safe-area-inset-top); }
+  .frames { position: fixed; top: env(safe-area-inset-top); left: 0; right: 0; bottom: var(--tabbar); }
+  .frames iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; background: var(--bg); display: none; }
+  .frames iframe.on { display: block; }
+  .tabbar {
+    position: fixed; left: 0; right: 0; bottom: 0; height: var(--tabbar); padding-bottom: env(safe-area-inset-bottom);
+    display: flex; background: var(--card); border-top: 3px solid #7357a4; z-index: 10;
+  }
+  .tabbar button {
+    flex: 1; border: 0; background: none; color: var(--muted); cursor: pointer; padding: 6px 0 4px; font: inherit; font-size: 12px; font-weight: 600;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; -webkit-tap-highlight-color: transparent;
+  }
+  .tabbar button svg { width: 26px; height: 26px; }
+  .tabbar button[aria-selected="true"] { color: var(--accent); }
+  .loading { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: var(--muted); pointer-events: none; }
+  .tip {
+    position: fixed; left: 10px; right: 10px; bottom: calc(var(--tabbar) + 10px); z-index: 20; background: var(--card); color: var(--ink);
+    border: 1px solid var(--line); border-left: 4px solid #d4a574; border-radius: 10px; padding: 10px 12px; box-shadow: 0 6px 20px rgba(0,0,0,.15);
+    display: flex; gap: 10px; align-items: center;
+  }
+  .tip p { margin: 0; flex: 1; font-size: 13px; }
+  .tip a { color: var(--accent); font-weight: 700; }
+  .tip button { border: 0; background: none; font-size: 20px; color: var(--muted); cursor: pointer; }
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+<div class="frames" id="frames"><div class="loading" id="loading">Loading…</div></div>
+
+<nav class="tabbar" role="tablist" aria-label="Mother Puppers">
+  <button role="tab" data-tab="walks" aria-selected="false">
+    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><ellipse cx="6" cy="9" rx="2.2" ry="2.8"/><ellipse cx="10.2" cy="5.5" rx="2.2" ry="2.8"/><ellipse cx="14.6" cy="5.5" rx="2.2" ry="2.8"/><ellipse cx="18.6" cy="9" rx="2.2" ry="2.8"/><path d="M12.3 11c-2.6 0-6.3 4.4-6.3 7.1 0 2.3 2 2.9 3.4 2.9 1.3 0 2-.6 2.9-.6s1.6.6 2.9.6c1.4 0 3.4-.6 3.4-2.9 0-2.7-3.7-7.1-6.3-7.1z"/></svg>
+    Dog walks
+  </button>
+  <button role="tab" data-tab="cleaning" aria-selected="false">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8l1.5 1.5L12 7M8 14l1.5 1.5L12 13M14 8.5h2.5M14 14.5h2.5"/></svg>
+    Cleaning
+  </button>
+  <button role="tab" data-tab="schedule" aria-selected="false">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4M7.5 14h3M13.5 14h3M7.5 17.5h3"/></svg>
+    Schedule
+  </button>
+</nav>
+
+<div class="tip hidden" id="tip"><p id="tipText"></p><button id="tipClose" aria-label="Dismiss">×</button></div>
+
+<script>
+// Each tab is one of the Mother Puppers sites in its own frame. Frames load on first
+// use and stay loaded, so switching tabs keeps each page where you left it.
+const SITES = {
+  walks: 'https://walks.motherpuppers.net/',
+  cleaning: 'https://cleaning.motherpuppers.net/',
+  schedule: 'https://schedules.motherpuppers.net/',
+};
+const store = {
+  get(k) { try { return localStorage.getItem(k); } catch { return null; } },
+  set(k, v) { try { localStorage.setItem(k, v); } catch {} },
+};
+const frames = {};
+
+function show(tab, reload) {
+  if (!SITES[tab]) tab = 'walks';
+  let f = frames[tab];
+  if (!f) {
+    f = frames[tab] = document.createElement('iframe');
+    f.title = tab;
+    f.addEventListener('load', () => document.getElementById('loading').classList.add('hidden'));
+    f.src = SITES[tab];
+    document.getElementById('frames').appendChild(f);
+  } else if (reload) {
+    f.src = SITES[tab];
+  }
+  for (const [k, el] of Object.entries(frames)) el.classList.toggle('on', k === tab);
+  document.querySelectorAll('.tabbar button').forEach((b) => b.setAttribute('aria-selected', b.dataset.tab === tab));
+  store.set('mp-tab', tab);
+  if (location.hash !== `#${tab}`) history.replaceState(null, '', `#${tab}`);
+}
+
+document.querySelector('.tabbar').addEventListener('click', (e) => {
+  const b = e.target.closest('button');
+  if (!b) return;
+  // Tapping the tab you're already on takes that page back to its start.
+  show(b.dataset.tab, b.getAttribute('aria-selected') === 'true');
+});
+
+show((location.hash || '').slice(1) || store.get('mp-tab') || 'walks');
+
+// Install tips for people using the plain website: Android gets the app download,
+// iPhone gets the Add to Home Screen steps. Nothing shows inside the installed app.
+(function tip() {
+  const ua = navigator.userAgent;
+  const installed = matchMedia('(display-mode: standalone)').matches || navigator.standalone || /MotherPuppersApp/.test(ua);
+  if (installed || store.get('mp-tip-closed')) return;
+  let text = '';
+  if (/Android/i.test(ua)) text = 'Get the Mother Puppers app for Android: <a href="/mother-puppers.apk">Download</a>';
+  else if (/iPhone|iPad|iPod/i.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1)) text = 'Add this to your Home Screen: tap <b>Share</b> <span aria-hidden="true">⎙</span>, then <b>Add to Home Screen</b>.';
+  if (!text) return;
+  document.getElementById('tipText').innerHTML = text;
+  document.getElementById('tip').classList.remove('hidden');
+  document.getElementById('tipClose').onclick = () => { document.getElementById('tip').classList.add('hidden'); store.set('mp-tip-closed', '1'); };
+})();
+
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});
+</script>
+</body>
+</html>

@@ -1,3 +1,11 @@
 node_modules/
 .env
 db/
+app/dist/
+app/android/local.properties
+app/android/keystore.properties
+app/android/.gradle/
+app/android/.kotlin/
+app/android/build/
+app/android/app/build/
+*.jks
