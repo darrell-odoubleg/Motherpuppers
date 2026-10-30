@@ -119,12 +119,8 @@ function render() {
       lastKennel = g.kennel;
       html += `<tr class="kennel"><th class="dogcol">${esc(g.kennel || 'No kennel')}</th><th colspan="${d.slots.length}"></th></tr>`;
     }
-    const tags = [];
-    if (g.arrives) tags.push(`<span class="tag in"><span class="long">Arrives</span><span class="short">In</span> ${fmtHM(g.arrives)}</span>`);
-    if (g.leaves) tags.push(`<span class="tag out"><span class="long">Leaves</span><span class="short">Out</span> ${fmtHM(g.leaves)}</span>`);
-    if (g.gone) tags.push('<span class="tag">No longer in PawPartner</span>');
-    const photo = g.has_photo ? `<img src="/api/photo/${g.pet_id}" alt="" loading="lazy">` : '<span class="nophoto">🐾</span>';
-    html += `<tr class="${g.gone ? 'gone' : ''}"><td class="dogcol"><div class="dog">${photo}<div><b>${esc(g.name)}</b><span class="breed" title="${esc(g.breed)}">${esc(g.breed)}</span>${tags.join(' ')}</div></div></td>`;
+    const gone = g.gone ? ' <span class="tag">No longer in PawPartner</span>' : '';
+    html += `<tr class="${g.gone ? 'gone' : ''}"><td class="dogcol"><div class="dog"><b>${esc(g.name)}</b>${gone}</div></td>`;
     html += d.slots.map((s, i) => `<td class="${[i === nowSlot ? 'now' : '', slotState(g, s)].join(' ').trim()}">${markHtml(g, s)}</td>`).join('');
     html += '</tr>';
   }
