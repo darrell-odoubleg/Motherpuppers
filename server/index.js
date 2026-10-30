@@ -258,6 +258,15 @@ app.post('/api/admin/sections', requireAdmin, (req, res) => {
   res.json({ id: r.lastInsertRowid });
 });
 
+// Saves the order sections appear in: ids is the area's sections, top to bottom.
+app.put('/api/admin/sections-order', requireAdmin, (req, res) => {
+  const ids = (req.body && req.body.ids) || [];
+  if (!Array.isArray(ids) || !ids.every(Number.isInteger)) return res.status(400).json({ error: 'Bad order' });
+  const set = db.prepare('UPDATE sections SET sort = ? WHERE id = ?');
+  db.transaction(() => ids.forEach((id, i) => set.run(i, id)))();
+  res.json({ ok: true });
+});
+
 app.put('/api/admin/sections/:id', requireAdmin, (req, res) => {
   const s = db.prepare('SELECT * FROM sections WHERE id = ?').get(req.params.id);
   if (!s) return res.status(404).json({ error: 'Not found' });

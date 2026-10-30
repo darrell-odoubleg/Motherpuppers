@@ -185,6 +185,10 @@ input[type=color] { width: 48px; height: 38px; padding: 2px; border: 1px solid v
 .ed-sec-head { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
 .ed-sec-head input[type=text] { flex: 1 1 200px; font-weight: 600; }
 .ed-sec-head select { width: auto; }
+.ed-move { display: inline-flex; gap: 4px; }
+.ed-move .btn { padding: 4px 10px; }
+.ed-move .btn:disabled { opacity: .35; cursor: default; }
+.ed-group { margin: 18px 2px 8px; font-size: .85rem; text-transform: uppercase; letter-spacing: .6px; color: var(--muted); }
 @media (max-width: 720px) {
   .ed-task { grid-template-columns: 1fr 1fr; }
 }

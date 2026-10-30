@@ -88,12 +88,41 @@ $('areaPick').addEventListener('change', () => { areaId = Number($('areaPick').v
 const periodOpts = (cur) => ['daily', 'weekly', 'monthly', 'info'].map((p) => `<option ${p === cur ? 'selected' : ''}>${p}</option>`).join('');
 const seasonOpts = (cur) => [['', 'all year'], ['summer', 'summer'], ['winter', 'winter']].map(([v, l]) => `<option value="${v}" ${v === (cur || '') ? 'selected' : ''}>${l}</option>`).join('');
 
+// The staff page groups sections by period (daily, weekly, monthly, then info), so the
+// editor does too, and ↑/↓ moves a section within its group.
+const PERIOD_ORDER = ['daily', 'weekly', 'monthly', 'info'];
+const PERIOD_NAMES = { daily: 'Daily', weekly: 'Weekly', monthly: 'Monthly', info: 'Info (bottom of the page)' };
+function orderedSections(area) {
+  return PERIOD_ORDER.flatMap((p) => area.sections.filter((s) => s.period === p));
+}
+
+async function moveSection(id, dir) {
+  const area = areas.find((a) => a.id === areaId);
+  const list = orderedSections(area);
+  const i = list.findIndex((s) => s.id === id);
+  const j = i + dir;
+  if (j < 0 || j >= list.length || list[j].period !== list[i].period) return;
+  [list[i], list[j]] = [list[j], list[i]];
+  area.sections = list;
+  renderEditor();
+  const card = document.querySelector(`[data-sec="${id}"]`);
+  if (card) card.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  await send('PUT', '/api/admin/sections-order', { ids: list.map((s) => s.id) });
+  toast('Order saved');
+}
+
 function renderEditor() {
   const area = areas.find((a) => a.id === areaId);
   if (!area) { $('editor').innerHTML = ''; return; }
-  $('editor').innerHTML = area.sections.map((s) => `
+  const list = orderedSections(area);
+  $('editor').innerHTML = list.map((s, i) => `
+    ${i === 0 || list[i - 1].period !== s.period ? `<h3 class="ed-group">${PERIOD_NAMES[s.period]}</h3>` : ''}
     <div class="card" data-sec="${s.id}">
       <div class="ed-sec-head">
+        <span class="ed-move">
+          <button class="btn" data-move="-1" title="Move up" ${i === 0 || list[i - 1].period !== s.period ? 'disabled' : ''}>↑</button>
+          <button class="btn" data-move="1" title="Move down" ${i === list.length - 1 || list[i + 1].period !== s.period ? 'disabled' : ''}>↓</button>
+        </span>
         <input type="text" data-sf="title" value="${esc(s.title)}">
         <select data-sf="period">${periodOpts(s.period)}</select>
         <select data-sf="season">${seasonOpts(s.season)}</select>
@@ -147,7 +176,9 @@ $('editor').addEventListener('change', async (e) => {
 $('editor').addEventListener('click', async (e) => {
   const el = e.target;
   try {
-    if (el.matches('[data-deltask]')) {
+    if (el.matches('[data-move]')) {
+      await moveSection(Number(el.closest('[data-sec]').dataset.sec), Number(el.dataset.move));
+    } else if (el.matches('[data-deltask]')) {
       const row = el.closest('[data-task]');
       if (!confirm(`Delete "${row.querySelector('[data-tf=label]').value}"?`)) return;
       await api(`/api/admin/tasks/${row.dataset.task}`, { method: 'DELETE' });
