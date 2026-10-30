@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mother Puppers Dog Walks</title>
+<link rel="stylesheet" href="/styles.css?v=1">
+<link rel="icon" type="image/png" href="/favicon.png">
+<link rel="apple-touch-icon" href="/icon.png">
+<meta name="theme-color" content="#7357a4">
+</head>
+<body>
+
+<div id="login" class="login-wrap hidden">
+  <form class="login" id="loginForm">
+    <h1><picture><source srcset="/logo-dark.png" media="(prefers-color-scheme: dark)"><img class="login-logo" src="/logo.png" alt="Mother Puppers" width="640" height="334"></picture></h1>
+    <p>Dog walks — sign in with your cleaning list login</p>
+    <label for="u">Username</label>
+    <input type="text" id="u" autocomplete="username" autocapitalize="none" required>
+    <label for="p">Password</label>
+    <input type="password" id="p" autocomplete="current-password" required>
+    <button class="btn primary" type="submit">Sign in</button>
+    <div class="err" id="loginErr"></div>
+  </form>
+</div>
+
+<div id="app" class="hidden">
+  <header class="top">
+    <div class="top-row">
+      <a class="brand" href="/"><picture><source srcset="/logo-dark.png" media="(prefers-color-scheme: dark)"><img class="logo" src="/logo.png" alt="Mother Puppers" width="640" height="334"></picture><small>Dog walks</small></a>
+      <span class="me" id="meName"></span>
+      <button class="btn" id="logout">Sign out</button>
+    </div>
+    <div class="day-row">
+      <button class="btn icon" id="prev" title="Previous day" aria-label="Previous day">‹</button>
+      <h2 id="dateLine"></h2>
+      <button class="btn icon" id="next" title="Next day" aria-label="Next day">›</button>
+      <button class="btn" id="todayBtn" hidden>Today</button>
+      <span class="spacer"></span>
+      <span class="sync muted" id="syncLine"></span>
+      <button class="btn" id="refresh">Refresh from PawPartner</button>
+    </div>
+    <div class="legend">
+      <span><span class="key walk">✓</span> Outside / pee</span>
+      <span><span class="key poop"></span> Poop</span>
+      <span class="muted">Tap a box: empty → ✓ → poop → empty</span>
+    </div>
+  </header>
+
+  <main>
+    <div class="banner hidden" id="banner"></div>
+    <div class="sheet-wrap">
+      <table class="sheet" id="sheet"></table>
+    </div>
+    <p class="muted foot" id="foot"></p>
+  </main>
+</div>
+
+<div class="toast hidden" id="toast"></div>
+<script src="/app.js?v=1"></script>
+</body>
+</html>
