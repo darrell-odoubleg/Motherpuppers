@@ -149,6 +149,11 @@ async function boot() {
 }
 
 function showLogin(msg) {
+  if (msg) document.getElementById('loginErr').textContent = msg;
+  // Only on the way to the sign-in screen: the page's
+// background refreshes keep getting 'signed out' while someone is typing, and must not
+// wipe what they've typed or move them back to the username box.
+  if (!document.getElementById('login').classList.contains('hidden')) return;
   for (const k of Object.keys(frames)) { frames[k].remove(); delete frames[k]; }
   document.getElementById('tabbar').classList.add('hidden');
   document.getElementById('loginErr').textContent = msg || '';

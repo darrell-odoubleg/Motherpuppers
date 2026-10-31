@@ -31,6 +31,12 @@ async function api(path, opts = {}) {
 }
 
 function showLogin(msg) {
+  state = null; // stops the background refresh
+  if (msg) $('loginErr').textContent = msg;
+  // Only on the way to the sign-in screen: the page's
+// background refreshes keep getting 'signed out' while someone is typing, and must not
+// wipe what they've typed or move them back to the username box.
+  if (!$('login').classList.contains('hidden')) return;
   $('app').classList.add('hidden');
   $('login').classList.remove('hidden');
   $('loginErr').textContent = msg || '';
