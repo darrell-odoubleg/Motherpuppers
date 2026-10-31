@@ -64,11 +64,11 @@ function parseApps(value, isAdmin) {
 function userFrom(req, res, usersDb) {
   const u = signedIn(req, usersDb);
   if (!u) return null;
-  const { pass_hash: _, signed_out_at: __, apps, ...user } = u;
+  const { pass_hash: _, signed_out_at: __, issued_at: ___, apps, ...user } = u;
   return { ...user, apps: parseApps(apps, u.is_admin) };
 }
 
-// The users row behind a valid, not-idle cookie, or null.
+// The users row behind a valid, not-idle cookie (with .issued_at), or null.
 function signedIn(req, usersDb) {
   const raw = readCookie(req, COOKIE);
   if (!raw) return null;
@@ -83,7 +83,7 @@ function signedIn(req, usersDb) {
   if (!u || passTag(u.pass_hash) !== t.p) return null;
   // Signed out since this cookie was issued (on this or any other phone or browser).
   if (u.signed_out_at && t.t <= u.signed_out_at) return null;
-  return u;
+  return { ...u, issued_at: t.t };
 }
 
 // /api/auth/ping: POST when someone taps or types (restarts the 15 minutes), GET just
@@ -93,8 +93,10 @@ function pingRoute(usersDb) {
     res.set('Cache-Control', 'no-store');
     const u = signedIn(req, usersDb);
     if (!u) return res.status(401).json({ error: 'Not signed in' });
+    const at = req.method === 'POST' ? Date.now() : u.issued_at;
     if (req.method === 'POST') issue(res, u);
-    res.json({ ok: true, idle_ms: IDLE_MS });
+    // How long until the idle sign-out, so the page can warn a minute before.
+    res.json({ ok: true, idle_ms: IDLE_MS, left_ms: Math.max(0, at + IDLE_MS - Date.now()) });
   };
 }
 

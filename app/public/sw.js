@@ -1,7 +1,7 @@
 // Keeps the app shell (tab bar and icons) available offline. The three sites inside
 // the tabs are always loaded live and are never cached here.
-const CACHE = 'mp-shell-v4';
-const SHELL = ['/', '/manifest.webmanifest', '/icon-192.png', '/favicon.png', '/logo.png', '/logo-dark.png'];
+const CACHE = 'mp-shell-v5';
+const SHELL = ['/', '/mp-idle.js', '/manifest.webmanifest', '/icon-192.png', '/favicon.png', '/logo.png', '/logo-dark.png'];
 
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting()));
