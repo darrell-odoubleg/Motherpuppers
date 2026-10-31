@@ -511,6 +511,18 @@
     chat.messages = chat.messages.filter(m => m.role !== 'error');
   });
 
+  // Signed out after 15 minutes with no taps or typing: only real use restarts the clock
+  // (the automatic refreshes don't). The server decides; a 401 means the time ran out.
+  (function idleSignOut() {
+    let last = 0;
+    const ping = (method) => fetch('/api/auth/ping', { method }).then((r) => { if (r.status === 401) { if (!document.getElementById('login').classList.contains('hidden')) return; showLogin(); } }).catch(() => {});
+    const active = () => { if (Date.now() - last > 30000) { last = Date.now(); ping('POST'); } };
+    for (const ev of ['pointerdown', 'keydown', 'wheel', 'touchmove']) addEventListener(ev, active, { passive: true, capture: true });
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) ping('GET'); });
+    setInterval(() => ping('GET'), 60000);
+    active();
+  })();
+
   start();
 })();
 

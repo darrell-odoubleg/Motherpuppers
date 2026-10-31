@@ -6,8 +6,9 @@ const crypto = require('crypto');
 const Database = require('better-sqlite3');
 
 const COOKIE = 'mp_auth';
-const MAX_AGE = 14 * 86400000;
-const RENEW_AFTER = 86400000;
+// Signed out after 15 minutes with no taps or typing. Only the pages' activity pings
+// (POST /api/auth/ping) renew the cookie; their automatic refreshes don't.
+const IDLE_MS = 15 * 60000;
 // The sites a login can be given; admins always get all of them.
 const APPS = ['walks', 'cleaning', 'schedule'];
 const APP_NAMES = { walks: 'Dog walks', cleaning: 'Cleaning', schedule: 'Schedule' };
@@ -42,7 +43,6 @@ function cookieOptions() {
 function issue(res, user) {
   const body = Buffer.from(JSON.stringify({ u: user.id, p: passTag(user.pass_hash), t: Date.now() })).toString('base64url');
   // No maxAge: a browser-session cookie, so closing the browser signs the person out.
-  // MAX_AGE still caps how long one stays good for a browser that is never closed.
   res.cookie(COOKIE, `${body}.${sign(body)}`, cookieOptions());
 }
 
@@ -60,9 +60,16 @@ function parseApps(value, isAdmin) {
   return [...APPS];
 }
 
-// The signed-in user (without pass_hash, with .apps), or null. Renews the cookie at most
-// once a day, so it lasts 14 days from the last visit (or until the browser is closed).
+// The signed-in user (without pass_hash, with .apps), or null.
 function userFrom(req, res, usersDb) {
+  const u = signedIn(req, usersDb);
+  if (!u) return null;
+  const { pass_hash: _, signed_out_at: __, apps, ...user } = u;
+  return { ...user, apps: parseApps(apps, u.is_admin) };
+}
+
+// The users row behind a valid, not-idle cookie, or null.
+function signedIn(req, usersDb) {
   const raw = readCookie(req, COOKIE);
   if (!raw) return null;
   const [body, mac] = raw.split('.');
@@ -71,14 +78,24 @@ function userFrom(req, res, usersDb) {
   if (mac.length !== good.length || !crypto.timingSafeEqual(Buffer.from(mac), Buffer.from(good))) return null;
   let t;
   try { t = JSON.parse(Buffer.from(body, 'base64url').toString()); } catch { return null; }
-  if (!t || !t.t || Date.now() - t.t > MAX_AGE) return null;
+  if (!t || !t.t || Date.now() - t.t > IDLE_MS) return null;
   const u = usersDb.prepare('SELECT id, name, username, color, is_admin, pass_hash, apps, signed_out_at FROM users WHERE id = ? AND active = 1').get(t.u);
   if (!u || passTag(u.pass_hash) !== t.p) return null;
   // Signed out since this cookie was issued (on this or any other phone or browser).
   if (u.signed_out_at && t.t <= u.signed_out_at) return null;
-  if (res && Date.now() - t.t > RENEW_AFTER) issue(res, u);
-  const { pass_hash: _, signed_out_at: __, apps, ...user } = u;
-  return { ...user, apps: parseApps(apps, u.is_admin) };
+  return u;
+}
+
+// /api/auth/ping: POST when someone taps or types (restarts the 15 minutes), GET just
+// checks. Pages use the 401 to switch to their sign-in screen.
+function pingRoute(usersDb) {
+  return (req, res) => {
+    res.set('Cache-Control', 'no-store');
+    const u = signedIn(req, usersDb);
+    if (!u) return res.status(401).json({ error: 'Not signed in' });
+    if (req.method === 'POST') issue(res, u);
+    res.json({ ok: true, idle_ms: IDLE_MS });
+  };
 }
 
 // Middleware: 401 when signed out, or when this login isn't allowed on this site
@@ -150,4 +167,4 @@ function logoutRoute(usersDb) {
   };
 }
 
-module.exports = { APPS, APP_NAMES, issue, clear, userFrom, requireApp, parseApps, checkPassword, loginRoute, logoutRoute };
+module.exports = { APPS, APP_NAMES, IDLE_MS, issue, clear, userFrom, pingRoute, requireApp, parseApps, checkPassword, loginRoute, logoutRoute };

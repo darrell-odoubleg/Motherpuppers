@@ -234,3 +234,15 @@ loadSettings();
 
 // A page brought back from the browser's memory may be from before a sign-out: load it fresh.
 window.addEventListener('pageshow', (e) => { if (e.persisted) location.reload(); });
+
+// Signed out after 15 minutes with no taps or typing: only real use restarts the clock
+// (the automatic refreshes don't). The server decides; a 401 means the time ran out.
+(function idleSignOut() {
+  let last = 0;
+  const ping = (method) => fetch('/api/auth/ping', { method }).then((r) => { if (r.status === 401) { location.href = '/'; } }).catch(() => {});
+  const active = () => { if (Date.now() - last > 30000) { last = Date.now(); ping('POST'); } };
+  for (const ev of ['pointerdown', 'keydown', 'wheel', 'touchmove']) addEventListener(ev, active, { passive: true, capture: true });
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) ping('GET'); });
+  setInterval(() => ping('GET'), 60000);
+  active();
+})();
