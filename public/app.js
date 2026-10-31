@@ -34,6 +34,8 @@ function showLogin(msg) {
   $('app').classList.add('hidden');
   $('login').classList.remove('hidden');
   $('loginErr').textContent = msg || '';
+  // Always blank: no name or password left from the last person.
+  $('loginForm').reset();
   // Inside the Mother Puppers app, let the app show its own (single) sign-in screen.
   if (window.top !== window) window.parent.postMessage('mp-signed-out', 'https://app.motherpuppers.net');
   $('u').focus();
@@ -48,7 +50,7 @@ $('loginForm').addEventListener('submit', async (e) => {
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) { $('loginErr').textContent = data.error || 'Sign in failed'; return; }
-  $('p').value = '';
+  $('loginForm').reset();
   $('login').classList.add('hidden');
   load();
 });

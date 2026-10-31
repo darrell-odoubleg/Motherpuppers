@@ -59,13 +59,13 @@
 </head>
 <body>
 <div class="login-wrap hidden" id="login">
-  <form class="login" id="loginForm">
+  <form class="login" id="loginForm" autocomplete="off">
     <picture><source srcset="/logo-dark.png" media="(prefers-color-scheme: dark)"><img src="/logo.png" alt="Mother Puppers" width="640" height="334"></picture>
     <p>Sign in once for dog walks, cleaning and the schedule</p>
     <label for="u">Username</label>
-    <input type="text" id="u" autocomplete="username" autocapitalize="none" required>
+    <input type="text" id="u" autocomplete="off" autocorrect="off" spellcheck="false" autocapitalize="none" required>
     <label for="p">Password</label>
-    <input type="password" id="p" autocomplete="current-password" required>
+    <input type="password" id="p" autocomplete="off" required>
     <button type="submit">Sign in</button>
     <div class="err" id="loginErr"></div>
   </form>
@@ -151,7 +151,13 @@ function showLogin(msg) {
   for (const k of Object.keys(frames)) { frames[k].remove(); delete frames[k]; }
   document.getElementById('tabbar').classList.add('hidden');
   document.getElementById('loginErr').textContent = msg || '';
+  clearLogin();
   document.getElementById('login').classList.remove('hidden');
+}
+
+// The sign-in screen always starts blank: no name or password left from the last person.
+function clearLogin() {
+  document.getElementById('loginForm').reset();
 }
 
 document.getElementById('loginForm').addEventListener('submit', async (e) => {
@@ -165,7 +171,7 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
     });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) { err.textContent = data.error || 'Sign in failed'; return; }
-    document.getElementById('p').value = '';
+    clearLogin();
     boot();
   } catch {
     err.textContent = 'No connection. Try again.';

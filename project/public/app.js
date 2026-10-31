@@ -39,6 +39,7 @@ $('#loginForm').addEventListener('submit', async (e) => {
   $('#loginErr').textContent = '';
   try {
     await api('/api/login', { method: 'POST', body: { username: $('#u').value, password: $('#p').value } });
+    $('#loginForm').reset();
     start();
   } catch (err) {
     $('#loginErr').textContent = err.message;
@@ -50,6 +51,7 @@ async function start() {
   try {
     me = await api('/api/me');
   } catch {
+    $('#loginForm').reset();
     $('#login').classList.remove('hidden');
     $('#app').classList.add('hidden');
     return;
