@@ -21,7 +21,7 @@ function requireAdmin(req, res, next) {
 }
 
 app.post('/api/login', mpauth.loginRoute(db, 'cleaning'));
-app.post('/api/logout', mpauth.logoutRoute);
+app.post('/api/logout', mpauth.logoutRoute(db));
 app.get('/api/me', requireUser, (req, res) => res.json(req.user));
 
 // For the app.motherpuppers.net shell (proxied there by nginx): who is signed in and

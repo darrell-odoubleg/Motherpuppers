@@ -3,6 +3,7 @@
 // each site checks it against the cleaning app's users table on every request, so turning
 // someone off or changing their password signs them out everywhere.
 const crypto = require('crypto');
+const Database = require('better-sqlite3');
 
 const COOKIE = 'mp_auth';
 const MAX_AGE = 14 * 86400000;
@@ -69,10 +70,12 @@ function userFrom(req, res, usersDb) {
   let t;
   try { t = JSON.parse(Buffer.from(body, 'base64url').toString()); } catch { return null; }
   if (!t || !t.t || Date.now() - t.t > MAX_AGE) return null;
-  const u = usersDb.prepare('SELECT id, name, username, color, is_admin, pass_hash, apps FROM users WHERE id = ? AND active = 1').get(t.u);
+  const u = usersDb.prepare('SELECT id, name, username, color, is_admin, pass_hash, apps, signed_out_at FROM users WHERE id = ? AND active = 1').get(t.u);
   if (!u || passTag(u.pass_hash) !== t.p) return null;
+  // Signed out since this cookie was issued (on this or any other phone or browser).
+  if (u.signed_out_at && t.t <= u.signed_out_at) return null;
   if (res && Date.now() - t.t > RENEW_AFTER) issue(res, u);
-  const { pass_hash: _, apps, ...user } = u;
+  const { pass_hash: _, signed_out_at: __, apps, ...user } = u;
   return { ...user, apps: parseApps(apps, u.is_admin) };
 }
 
@@ -127,9 +130,22 @@ function loginRoute(usersDb, app) {
   };
 }
 
-function logoutRoute(req, res) {
-  clear(res);
-  res.json({ ok: true });
+// Signing out ends that person's sign-in everywhere: a home-screen app keeps its own
+// cookies apart from the browser, so clearing this cookie alone would leave them signed in there.
+// walks and schedules open the users table read-only, so this uses its own writable handle.
+let writer = null;
+function logoutRoute(usersDb) {
+  return (req, res) => {
+    const u = userFrom(req, null, usersDb);
+    if (u) {
+      if (!writer) {
+        writer = usersDb.readonly ? new Database(usersDb.name, { fileMustExist: true, timeout: 5000 }) : usersDb;
+      }
+      writer.prepare('UPDATE users SET signed_out_at = ? WHERE id = ?').run(Date.now(), u.id);
+    }
+    clear(res);
+    res.json({ ok: true });
+  };
 }
 
 module.exports = { APPS, APP_NAMES, issue, clear, userFrom, requireApp, parseApps, checkPassword, loginRoute, logoutRoute };

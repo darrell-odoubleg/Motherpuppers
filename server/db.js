@@ -61,6 +61,7 @@ db.exec(`
 
 // Which Mother Puppers sites each login can open (JSON list; NULL = all). See shared/mpauth.js.
 if (!db.prepare('PRAGMA table_info(users)').all().some((c) => c.name === 'apps')) db.exec('ALTER TABLE users ADD COLUMN apps TEXT');
+if (!db.prepare('PRAGMA table_info(users)').all().some((c) => c.name === 'signed_out_at')) db.exec('ALTER TABLE users ADD COLUMN signed_out_at INTEGER');
 
 const DEFAULT_SETTINGS = {
   timezone: process.env.TZ_DEFAULT || 'America/Denver',

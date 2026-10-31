@@ -29,7 +29,7 @@ function requireAdmin(req, res, next) {
 }
 
 app.post('/api/login', mpauth.loginRoute(users, 'schedule'));
-app.post('/api/logout', mpauth.logoutRoute);
+app.post('/api/logout', mpauth.logoutRoute(users));
 app.get('/api/me', requireUser, (req, res) => res.json(req.user));
 
 // ---------- dates ----------

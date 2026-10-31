@@ -21,7 +21,7 @@ app.use(express.json({ limit: '100kb' }));
 const requireUser = mpauth.requireApp(users, 'walks');
 
 app.post('/api/login', mpauth.loginRoute(users, 'walks'));
-app.post('/api/logout', mpauth.logoutRoute);
+app.post('/api/logout', mpauth.logoutRoute(users));
 app.get('/api/me', requireUser, (req, res) => res.json(req.user));
 
 // ---------- dates ----------
