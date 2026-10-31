@@ -41,7 +41,9 @@ function cookieOptions() {
 
 function issue(res, user) {
   const body = Buffer.from(JSON.stringify({ u: user.id, p: passTag(user.pass_hash), t: Date.now() })).toString('base64url');
-  res.cookie(COOKIE, `${body}.${sign(body)}`, { ...cookieOptions(), maxAge: MAX_AGE });
+  // No maxAge: a browser-session cookie, so closing the browser signs the person out.
+  // MAX_AGE still caps how long one stays good for a browser that is never closed.
+  res.cookie(COOKIE, `${body}.${sign(body)}`, cookieOptions());
 }
 
 function clear(res) {
@@ -59,7 +61,7 @@ function parseApps(value, isAdmin) {
 }
 
 // The signed-in user (without pass_hash, with .apps), or null. Renews the cookie at most
-// once a day, so it lasts 14 days from the last visit.
+// once a day, so it lasts 14 days from the last visit (or until the browser is closed).
 function userFrom(req, res, usersDb) {
   const raw = readCookie(req, COOKIE);
   if (!raw) return null;
