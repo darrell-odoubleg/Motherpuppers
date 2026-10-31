@@ -8,6 +8,9 @@ const PORT = process.env.PORT || 4200;
 const app = express();
 app.set('trust proxy', 1);
 app.use(express.json());
+// Browsers must not keep signed-in pages or data: Chrome redraws a saved copy on Back or when
+// reopening a tab, which looked signed in after Sign out.
+app.use('/api', (req, res, next) => { res.set('Cache-Control', 'no-store'); next(); });
 
 // Sessions live in SQLite so restarts don't sign everyone out.
 class SqliteStore extends session.Store {
@@ -377,6 +380,6 @@ app.patch('/api/admin/users/:id', requireAdmin, (req, res) => {
 });
 
 // ---------- static ----------
-app.use(express.static(path.join(__dirname, '..', 'public'), { extensions: ['html'] }));
+app.use(express.static(path.join(__dirname, '..', 'public'), { extensions: ['html'], setHeaders: (res, file) => { if (file.endsWith('.html')) res.set('Cache-Control', 'no-store'); } }));
 
 app.listen(PORT, '127.0.0.1', () => console.log(`motherpuppers-project on 127.0.0.1:${PORT}`));

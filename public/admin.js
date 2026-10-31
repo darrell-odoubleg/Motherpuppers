@@ -231,3 +231,6 @@ $('saveSettings').addEventListener('click', async () => {
 loadUsers();
 loadTasks();
 loadSettings();
+
+// A page brought back from the browser's memory may be from before a sign-out: load it fresh.
+window.addEventListener('pageshow', (e) => { if (e.persisted) location.reload(); });

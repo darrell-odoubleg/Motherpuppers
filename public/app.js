@@ -217,3 +217,7 @@ setInterval(() => { if (state && !armed && !document.hidden) load(); }, 15000);
 document.addEventListener('visibilitychange', () => { if (!document.hidden && state) load(); });
 
 load();
+
+// A page brought back from the browser's memory (Back, reopening a tab) may be from before
+// a sign-out: load it fresh so it asks the server who is signed in.
+window.addEventListener('pageshow', (e) => { if (e.persisted) location.reload(); });

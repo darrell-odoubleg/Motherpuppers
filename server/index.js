@@ -9,6 +9,9 @@ const PORT = process.env.PORT || 4100;
 const app = express();
 app.set('trust proxy', 1);
 app.use(express.json());
+// Browsers must not keep signed-in pages or data: Chrome redraws a saved copy on Back or when
+// reopening a tab, which looked signed in after Sign out.
+app.use('/api', (req, res, next) => { res.set('Cache-Control', 'no-store'); next(); });
 
 // ---------- auth (one sign-in across the Mother Puppers sites, see shared/mpauth.js) ----------
 const requireUser = mpauth.requireApp(db, 'cleaning');
@@ -268,7 +271,7 @@ app.delete('/api/admin/tasks/:id', requireAdmin, (req, res) => {
 });
 
 // ---------- pages ----------
-app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, '..', 'public', 'admin.html')));
-app.use(express.static(path.join(__dirname, '..', 'public')));
+app.get('/admin', (req, res) => res.set('Cache-Control', 'no-store').sendFile(path.join(__dirname, '..', 'public', 'admin.html')));
+app.use(express.static(path.join(__dirname, '..', 'public'), { setHeaders: (res, file) => { if (file.endsWith('.html')) res.set('Cache-Control', 'no-store'); } }));
 
 app.listen(PORT, '127.0.0.1', () => console.log(`motherpuppers-cleaning on :${PORT}`));
