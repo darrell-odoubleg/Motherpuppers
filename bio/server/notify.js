@@ -2,6 +2,8 @@
 // motherpuppers.net's Microsoft 365 mail server, with no mailbox login. Outbound port 25
 // only works over IPv6 from this server, and Microsoft wants SPF there, so
 // bio.motherpuppers.net needs a TXT record listing this server's IPv6 address.
+const fs = require('fs');
+const path = require('path');
 const nodemailer = require('nodemailer');
 
 const QUESTIONS = [
@@ -39,6 +41,12 @@ async function sendBio(b, jpeg) {
     connectionTimeout: 20000,
     disableFileAccess: true,
     disableUrlAccess: true,
+    // DKIM signing once DKIM_SELECTOR is set (TXT at <selector>._domainkey.bio.motherpuppers.net).
+    ...(process.env.DKIM_SELECTOR ? { dkim: {
+      domainName: 'bio.motherpuppers.net',
+      keySelector: process.env.DKIM_SELECTOR,
+      privateKey: fs.readFileSync(process.env.DKIM_KEY_FILE || path.join(__dirname, '..', 'db', 'dkim', 'bio.key'), 'utf8'),
+    } } : {}),
   });
   const safe = b.name.replace(/[^\w .-]+/g, '').trim() || 'staff';
   await transport.sendMail({
