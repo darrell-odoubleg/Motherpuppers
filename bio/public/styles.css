@@ -1,0 +1,92 @@
+:root {
+  --bg: #f7f5fa;
+  --card: #ffffff;
+  --ink: #2a2a2a;
+  --muted: #6b6775;
+  --line: #e5e0ec;
+  --accent: #7357a4;
+  --accent-ink: #ffffff;
+  --box: #faf8fc;
+  --warn: #b42318;
+  --ok-bg: #f1ebfb;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #17151c;
+    --card: #211e28;
+    --ink: #eeecf2;
+    --muted: #a49fae;
+    --line: #35313e;
+    --accent: #a78bdb;
+    --accent-ink: #17151c;
+    --box: #2a2632;
+    --warn: #ff7b72;
+    --ok-bg: #2c2538;
+  }
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font: 15px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+button, input, textarea { font: inherit; color: inherit; }
+.hidden { display: none !important; }
+.muted { color: var(--muted); }
+.small { font-size: 13px; }
+.visually-hidden { position: absolute; width: 1px; height: 1px; opacity: 0; overflow: hidden; }
+
+/* Mother Puppers brand */
+:root { --brand-purple: #7357a4; --brand-charcoal: #2a2a2a; --brand-tan: #d4a574; }
+.brand { display: flex; align-items: center; gap: 12px; text-decoration: none; color: var(--ink); font-weight: 700; font-size: 17px; margin-right: auto; }
+.brand .logo { height: 46px; width: auto; display: block; }
+.brand small { display: block; padding-left: 12px; border-left: 2px solid var(--brand-tan); font-weight: 500; font-size: 12px; color: var(--muted); }
+.login-logo { display: block; width: 100%; max-width: 260px; height: auto; margin: 0 auto 10px; }
+@media (max-width: 520px) {
+  .brand .logo { height: 36px; }
+  .brand small { font-size: 11px; padding-left: 8px; }
+}
+
+.btn { display: inline-block; border: 1px solid var(--line); background: var(--card); border-radius: 8px; padding: 8px 14px; cursor: pointer; font-weight: 600; }
+.btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.btn.big { width: 100%; padding: 12px; font-size: 16px; margin-top: 8px; }
+.btn:disabled { opacity: .5; cursor: default; }
+
+.top { position: sticky; top: 0; z-index: 20; background: var(--card); border-bottom: 3px solid var(--brand-purple); }
+.top-row { display: flex; align-items: center; gap: 10px; max-width: 760px; margin: 0 auto; padding: 10px 16px; flex-wrap: wrap; }
+.me { white-space: nowrap; font-weight: 600; }
+
+main { max-width: 760px; margin: 0 auto; padding: 18px 16px 40px; }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 20px; }
+.card h2 { margin: 0 0 4px; font-size: 20px; color: var(--accent); }
+.intro { margin: 0 0 12px; }
+.note { background: var(--ok-bg); border-radius: 8px; padding: 8px 12px; margin: 0 0 12px; font-size: 14px; }
+
+label, .label { display: block; font-weight: 700; margin: 16px 0 6px; }
+input[type=text], input[type=password], textarea {
+  width: 100%; border: 1px solid var(--line); border-radius: 8px; background: var(--box); padding: 10px 12px;
+}
+textarea { resize: vertical; min-height: 120px; }
+input:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+
+.photo-row { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+.photo-box { margin: 0; width: 150px; height: 150px; border: 2px dashed var(--line); border-radius: 12px; background: var(--box);
+  display: flex; align-items: center; justify-content: center; text-align: center; overflow: hidden; cursor: pointer; font-weight: 500; color: var(--muted); padding: 8px; }
+.photo-box.has { border-style: solid; border-color: var(--accent); padding: 0; }
+.photo-box img { width: 100%; height: 100%; object-fit: cover; }
+.photo-side { flex: 1; min-width: 180px; }
+.photo-side label.btn { margin: 0; font-weight: 600; }
+.photo-side p { margin: 8px 0 0; }
+
+.err { color: var(--warn); margin-top: 10px; min-height: 1em; font-weight: 600; }
+
+.login-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 16px; }
+.login { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 24px; width: 100%; max-width: 360px; }
+.login h1 { margin: 0; }
+.login p { text-align: center; color: var(--muted); margin: 0 0 8px; }
+.login label { margin: 12px 0 4px; }
+.login .btn { width: 100%; margin-top: 16px; padding: 10px; }
+
+.toast { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 8px; z-index: 50; max-width: calc(100% - 32px); }

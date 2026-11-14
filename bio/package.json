@@ -1,0 +1,17 @@
+{
+  "name": "motherpuppers-bio",
+  "version": "1.0.0",
+  "description": "Mother Puppers staff bio form: photo + three questions, emailed to Tammie",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node server/index.js"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.10.0",
+    "dotenv": "^16.6.1",
+    "express": "^4.22.3",
+    "multer": "^2.5.0",
+    "nodemailer": "^10.5.0",
+    "sharp": "^0.33.5"
+  }
+}

@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mother Puppers Staff Bio</title>
+<link rel="stylesheet" href="/styles.css?v=1">
+<link rel="icon" type="image/png" href="/favicon.png">
+<link rel="apple-touch-icon" href="/icon.png">
+<meta name="theme-color" content="#7357a4">
+</head>
+<body>
+
+<div id="login" class="login-wrap hidden">
+  <form class="login" id="loginForm" autocomplete="off">
+    <h1><picture><source srcset="/logo-dark.png" media="(prefers-color-scheme: dark)"><img class="login-logo" src="/logo.png" alt="Mother Puppers" width="640" height="334"></picture></h1>
+    <p>Staff bio — sign in with your cleaning list login</p>
+    <label for="u">Username</label>
+    <input type="text" id="u" autocomplete="off" autocorrect="off" spellcheck="false" autocapitalize="none" required>
+    <label for="p">Password</label>
+    <input type="password" id="p" autocomplete="off" required>
+    <button class="btn primary" type="submit">Sign in</button>
+    <div class="err" id="loginErr"></div>
+  </form>
+</div>
+
+<div id="app" class="hidden">
+  <header class="top">
+    <div class="top-row">
+      <a class="brand" href="/"><picture><source srcset="/logo-dark.png" media="(prefers-color-scheme: dark)"><img class="logo" src="/logo.png" alt="Mother Puppers" width="640" height="334"></picture><small>Staff bio</small></a>
+      <span class="me" id="meName"></span>
+      <button class="btn" id="logout">Sign out</button>
+    </div>
+  </header>
+
+  <main>
+    <form id="bioForm" class="card" novalidate>
+      <h2>Tell us about you</h2>
+      <p class="muted intro">Add a picture and answer the three questions below. When you press Send, your bio goes to Tammie.</p>
+      <p class="note hidden" id="lastNote"></p>
+
+      <label for="name">Your name</label>
+      <input type="text" id="name" maxlength="100" required>
+
+      <span class="label">Your picture</span>
+      <div class="photo-row">
+        <label class="photo-box" id="photoBox" for="photo">
+          <img id="preview" alt="" hidden>
+          <span id="photoHint">Tap to add a picture</span>
+        </label>
+        <div class="photo-side">
+          <input type="file" id="photo" accept="image/*" class="visually-hidden">
+          <label for="photo" class="btn" id="photoBtn">Choose picture</label>
+          <p class="muted small">A clear photo of you (with a pup is great!). JPG or PNG.</p>
+        </div>
+      </div>
+
+      <label for="journey">My journey with animals</label>
+      <textarea id="journey" rows="6" maxlength="5000" required></textarea>
+
+      <label for="love">What I love about Mother Puppers</label>
+      <textarea id="love" rows="6" maxlength="5000" required></textarea>
+
+      <label for="outside">Life outside the Kennel</label>
+      <textarea id="outside" rows="6" maxlength="5000" required></textarea>
+
+      <div class="err" id="formErr"></div>
+      <button class="btn primary big" type="submit" id="send">Send my bio</button>
+    </form>
+
+    <div id="done" class="card hidden">
+      <h2>Thank you! 🐾</h2>
+      <p id="doneMsg"></p>
+      <button class="btn" id="again">Send another</button>
+    </div>
+  </main>
+</div>
+
+<div class="toast hidden" id="toast"></div>
+<script src="/mp-idle.js?v=1"></script>
+<script src="/app.js?v=1"></script>
+</body>
+</html>
