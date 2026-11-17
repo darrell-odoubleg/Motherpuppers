@@ -29,7 +29,7 @@ $('tabs').addEventListener('click', (e) => {
 
 // ---------- staff ----------
 // The Mother Puppers apps a login can be given (matches shared/mpauth.js).
-const APPS = ['walks', 'cleaning', 'schedule'];
+const APPS = ['cleaning', 'schedule']; // dog walks paused
 async function loadUsers() {
   const users = await api('/api/admin/users');
   $('users').innerHTML = users.map((u) => `

@@ -10,7 +10,9 @@ const COOKIE = 'mp_auth';
 // (POST /api/auth/ping) renew the cookie; their automatic refreshes don't.
 const IDLE_MS = 15 * 60000;
 // The sites a login can be given; admins always get all of them.
-const APPS = ['walks', 'cleaning', 'schedule'];
+// Dog walks is paused (2026-11-17) until PawPartner has an API; add 'walks' back here,
+// in public/admin.js + admin.html, and the app shell tab to bring it back.
+const APPS = ['cleaning', 'schedule'];
 const APP_NAMES = { walks: 'Dog walks', cleaning: 'Cleaning', schedule: 'Schedule' };
 
 function secret() {
