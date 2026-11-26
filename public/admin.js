@@ -138,15 +138,16 @@ function renderEditor() {
         ? `<textarea data-sf="note" rows="8">${esc(s.note)}</textarea>`
         : `<input type="text" data-sf="note" value="${esc(s.note)}">`}
       ${s.period === 'info' ? '' : `
-        <div class="ed-task muted" style="border-top:0"><span>Task</span><span>Note</span><span>Boxes</span><span>Months</span><span></span></div>
-        ${s.tasks.map((t) => `
+        <div class="ed-task muted" style="border-top:0"><span></span><span>Task</span><span>Note</span><span>Boxes</span><span>Months</span><span></span></div>
+        <div class="ed-tasks" data-sec-tasks="${s.id}">${s.tasks.map((t) => `
           <div class="ed-task" data-task="${t.id}">
+            <span class="ed-handle" title="Drag to move" aria-label="Drag to move">⠿</span>
             <input type="text" data-tf="label" value="${esc(t.label)}">
             <input type="text" data-tf="note" value="${esc(t.note)}" placeholder="note">
             <input type="text" data-tf="boxes" value="${esc(t.boxes.join(', '))}">
             <input type="text" data-tf="months" value="${t.months ? t.months.join(', ') : ''}" placeholder="every month">
             <button class="btn danger" data-deltask title="Delete task">✕</button>
-          </div>`).join('')}
+          </div>`).join('')}</div>
         <button class="btn" data-addtask style="margin-top:8px">+ Add task</button>`}
     </div>`).join('') + `
     <div class="card">
@@ -206,6 +207,79 @@ $('editor').addEventListener('click', async (e) => {
     }
   } catch (err) { toast(err.message); }
 });
+
+// ---------- drag and drop tasks ----------
+// Grab a task by its ⠿ handle and drop it anywhere in the list, including into another
+// section of the same area. Pointer events, so it works with a finger as well as a mouse.
+let drag = null;
+
+function dragScroll() {
+  if (!drag) return;
+  const edge = 70, y = drag.y;
+  if (y < edge) window.scrollBy(0, -Math.ceil((edge - y) / 5));
+  else if (y > innerHeight - edge) window.scrollBy(0, Math.ceil((y - (innerHeight - edge)) / 5));
+  placeDrop();
+  drag.raf = requestAnimationFrame(dragScroll);
+}
+
+function placeDrop() {
+  const el = document.elementFromPoint(drag.x, drag.y);
+  const list = el && el.closest('[data-sec-tasks]');
+  if (!list) return;
+  const rows = [...list.querySelectorAll('.ed-task:not(.dragging)')];
+  const before = rows.find((r) => { const b = r.getBoundingClientRect(); return drag.y < b.top + b.height / 2; });
+  if (before) { if (before.previousElementSibling !== drag.ph) list.insertBefore(drag.ph, before); }
+  else if (list.lastElementChild !== drag.ph) list.appendChild(drag.ph);
+}
+
+$('editor').addEventListener('pointerdown', (e) => {
+  const h = e.target.closest('.ed-handle');
+  if (!h || drag || e.button > 0) return;
+  e.preventDefault();
+  if (document.activeElement) document.activeElement.blur(); // saves a field being edited first
+  const row = h.closest('.ed-task');
+  const r = row.getBoundingClientRect();
+  const ph = document.createElement('div');
+  ph.className = 'ed-ph';
+  ph.style.height = r.height + 'px';
+  row.before(ph);
+  Object.assign(row.style, { width: r.width + 'px', left: r.left + 'px', top: r.top + 'px' });
+  row.classList.add('dragging');
+  drag = { row, ph, dy: e.clientY - r.top, x: e.clientX, y: e.clientY, from: Number(row.parentElement.dataset.secTasks), id: e.pointerId };
+  drag.raf = requestAnimationFrame(dragScroll);
+});
+
+window.addEventListener('pointermove', (e) => {
+  if (!drag || e.pointerId !== drag.id) return;
+  e.preventDefault();
+  drag.x = e.clientX; drag.y = e.clientY;
+  drag.row.style.top = (e.clientY - drag.dy) + 'px';
+}, { passive: false });
+
+async function endDrag(e) {
+  if (!drag || e.pointerId !== drag.id) return;
+  const { row, ph, from } = drag;
+  cancelAnimationFrame(drag.raf);
+  drag = null;
+  ph.replaceWith(row);
+  row.classList.remove('dragging');
+  row.removeAttribute('style');
+  if (e.type === 'pointercancel') return loadTasks();
+  const to = Number(row.parentElement.dataset.secTasks);
+  const ids = (sec) => [...document.querySelectorAll(`[data-sec-tasks="${sec}"] > .ed-task`)].map((x) => Number(x.dataset.task));
+  const sections = [...new Set([from, to])].map((id) => ({ id, tasks: ids(id) }));
+  // Nothing moved: leave it.
+  const area = areas.find((a) => a.id === areaId);
+  const before = (id) => area.sections.find((s) => s.id === id).tasks.map((t) => t.id).join();
+  if (sections.every((s) => s.tasks.join() === before(s.id))) return;
+  try {
+    await send('PUT', '/api/admin/tasks-order', { sections });
+    toast(from === to ? 'Order saved' : 'Moved');
+  } catch (err) { toast(err.message); }
+  loadTasks();
+}
+window.addEventListener('pointerup', endDrag);
+window.addEventListener('pointercancel', endDrag);
 
 // ---------- settings ----------
 function monthChecks(el, picked) {

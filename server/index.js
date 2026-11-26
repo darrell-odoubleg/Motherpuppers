@@ -251,6 +251,23 @@ app.post('/api/admin/tasks', requireAdmin, (req, res) => {
   res.json({ id: r.lastInsertRowid });
 });
 
+// Saves drag-and-drop moves: each entry is a section and its task ids, top to bottom.
+// A task listed under a different section moves into it.
+app.put('/api/admin/tasks-order', requireAdmin, (req, res) => {
+  const secs = (req.body && req.body.sections) || [];
+  if (!Array.isArray(secs) || !secs.every((s) => s && Number.isInteger(s.id) && Array.isArray(s.tasks) && s.tasks.every(Number.isInteger))) {
+    return res.status(400).json({ error: 'Bad order' });
+  }
+  for (const s of secs) {
+    const row = db.prepare('SELECT period FROM sections WHERE id = ?').get(s.id);
+    if (!row) return res.status(404).json({ error: 'Section not found' });
+    if (row.period === 'info') return res.status(400).json({ error: 'Info sections have no tasks' });
+  }
+  const set = db.prepare('UPDATE tasks SET section_id = ?, sort = ? WHERE id = ?');
+  db.transaction(() => secs.forEach((s) => s.tasks.forEach((id, i) => set.run(s.id, i, id))))();
+  res.json({ ok: true });
+});
+
 app.put('/api/admin/tasks/:id', requireAdmin, (req, res) => {
   const t = db.prepare('SELECT * FROM tasks WHERE id = ?').get(req.params.id);
   if (!t) return res.status(404).json({ error: 'Not found' });

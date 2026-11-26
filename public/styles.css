@@ -180,7 +180,7 @@ th { font-size: 12px; text-transform: uppercase; color: var(--muted); letter-spa
 .row > div { flex: 1 1 160px; }
 input[type=color] { width: 48px; height: 38px; padding: 2px; border: 1px solid var(--line); border-radius: 8px; background: var(--box); }
 .muted { color: var(--muted); font-size: 13px; }
-.ed-task { display: grid; grid-template-columns: 1.4fr 1fr 1.2fr .7fr auto; gap: 6px; align-items: center; padding: 6px 0; border-top: 1px solid var(--line); }
+.ed-task { display: grid; grid-template-columns: auto 1.4fr 1fr 1.2fr .7fr auto; gap: 6px; align-items: center; padding: 6px 0; border-top: 1px solid var(--line); }
 .ed-task input { padding: 6px 8px; }
 .ed-sec-head { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
 .ed-sec-head input[type=text] { flex: 1 1 200px; font-weight: 600; }
@@ -190,8 +190,18 @@ input[type=color] { width: 48px; height: 38px; padding: 2px; border: 1px solid v
 .ed-move .btn:disabled { opacity: .35; cursor: default; }
 .ed-group { margin: 18px 2px 8px; font-size: .85rem; text-transform: uppercase; letter-spacing: .6px; color: var(--muted); }
 @media (max-width: 720px) {
-  .ed-task { grid-template-columns: 1fr 1fr; }
+  .ed-task { grid-template-columns: auto 1fr 1fr; }
+  .ed-task .ed-handle { grid-row: span 3; align-self: center; }
 }
 /* admin: which apps a new login can use */
 .apps { display: flex; gap: 10px; flex-wrap: wrap; }
 .apps label { display: inline-flex; align-items: center; gap: 4px; margin: 0; color: var(--ink); font-size: 13px; }
+
+/* drag and drop tasks (admin) */
+.ed-tasks { min-height: 36px; }
+.ed-handle { cursor: grab; touch-action: none; user-select: none; padding: 6px 4px; font-size: 18px; line-height: 1; color: var(--muted); }
+.ed-handle:hover { color: inherit; }
+.ed-task.dragging { position: fixed; z-index: 50; pointer-events: none; background: var(--card); box-shadow: 0 8px 24px rgba(0,0,0,.25); border-radius: 8px; padding: 6px 8px; opacity: .95; }
+.ed-task.dragging .ed-handle { cursor: grabbing; }
+.ed-ph { border: 2px dashed #7357a4; border-radius: 8px; margin: 4px 0; background: rgba(115,87,164,.08); }
+body:has(.ed-task.dragging) { user-select: none; cursor: grabbing; }
